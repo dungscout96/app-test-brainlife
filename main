@@ -4,5 +4,5 @@
 #PBS -l walltime=00:05:00
 
 #parse config.json for input parameters (here, we are pulling "t1")
-t1=$(jq -r .t1 config.json)
-./app.m $t1
+data=$(jq -r .set config.json)
+./app.m $data
