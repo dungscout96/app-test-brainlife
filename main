@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=00:05:00
+
+#parse config.json for input parameters (here, we are pulling "t1")
+t1=$(jq -r .t1 config.json)
+./app.m $t1
