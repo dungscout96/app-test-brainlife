@@ -9,15 +9,21 @@ RUN apt-get update \
     && apt-get clean
 ADD install.sh install.sh
 RUN sh ./install.sh && rm install.sh
+
+#make it work under singularity
+RUN ldconfig && mkdir -p /N/u /N/home /N/dc2 /N/soft
+
 RUN useradd -ms /bin/bash octave
+ADD eeglab /home/octave/eeglab
 ADD ICLabel /home/octave
 ADD firfilt /home/octave
-ADD *.m /home/octave/
-ADD *.set /home/octave/
+ADD *.m /home/octave
+ADD *.set /home/octave
+ADD *.fdt /home/octave
 RUN chown -R octave:octave /home/octave/
 
 USER octave
 WORKDIR /home/octave
 
 VOLUME ["/source"]
-ENTRYPOINT ["octave"]
+ENTRYPOINT ["octave-cli"]
