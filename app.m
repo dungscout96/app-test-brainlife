@@ -1,5 +1,5 @@
 #!/usr/local/bin/octave -qf
-addpath('eeglab');
+addpath(fullfile(pwd, 'eeglab'));
 eeglab;
 arg_list = argv();
 EEG = pop_loadset(arg_list{1});
