@@ -1,6 +1,6 @@
 #!/usr/local/bin/octave -qf
-addpath('eeglab');
-eeglab;
+addpath([pwd '/eeglab']);
+eeglab nogui;
 arg_list = argv();
 EEG = pop_loadset(arg_list{1});
 %addpath(pwd, 'iclabel');
