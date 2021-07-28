@@ -1,22 +1,22 @@
-# Nemar Tool Proof Of Concept
+# Docker commands
+docker login
 
-A simple docker application running Octave and some EEGLAB scripts.
+docker pull dtyoung/eeglab-pipeline:1.1
+docker image list
+docker run fce893a28159 ./app.m eeglab_data_epochs_ica.set
 
-## Usage
 
-```
-$ docker build --tag=octavedock13 .
-$ docker run --rm -it octavedock13
-$ # Then at the Octave prompt, install the signal processing toolbox (this should really be done in the Docker file)
-$ pkg install -forge control
-$ pkg install -forge signal
-$ pkg load signal
-$ # Then run script
-$ script_test
-```
+# Git clone
+https://github.com/dungscout96/app-test-brainlife
+docker build -t eeglab-octave:1.2 .
 
-Run the script file directly (for a modified version that would include the signal processing toolbox)
+docker tag octave-eeglab:1.2 arnodelorme/octave-eeglab:1.2
+docker tag eeglab-octave:1.2 arnodelorme/eeglab-octave:1.2
+docker push arnodelorme/eeglab-octave:1.2
+docker pull arnodelorme/octave-eeglab:1.2
 
-```
-$ docker run --rm -it octavedock script_test.m arg1  # Run the example file
-```
+# Files 
+Dockerfile  - docker configuration
+main        - brainlife executable
+config.json - provided by brainlife
+
