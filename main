@@ -4,5 +4,5 @@
 #PBS -l walltime=00:05:00
 
 #parse config.json for input parameters (here, we are pulling "t1")
-data=$(jq -r .set config.json)
-./app.m $data
+#data=$(jq -r .set config.json)
+singularity exec -e docker://dtyoung/eeglab-pipeline:eeglab octave-cli ./app.m ./eeglab_data_epochs_ica.set
