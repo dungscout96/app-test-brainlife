@@ -1,4 +1,5 @@
 addpath('/home/octave/eeglab');
+addpath('/home/octave/JSONio');
 eeglab nogui;
 
 % arg_list = argv();
@@ -8,7 +9,7 @@ file = 'config.json';
 fid = fopen(file); 
 raw = fread(fid,inf); 
 str = char(raw');
-args = jsondecode(str);
+args = jsonread(str);
 EEG = pop_loadset(args.set);
 
 %addpath(pwd, 'iclabel');
