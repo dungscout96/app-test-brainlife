@@ -1,7 +1,9 @@
 #!/bin/bash
 
-#PBS -l nodes=1:ppn=1
-#PBS -l walltime=00:05:00
+#SBATCH --job-name=mytestjob
+#SBATCH --ntasks-per-node=1
+#SBATCH --mem=1G
+#SBATCH --time=00:15:00
 
 #parse config.json for input parameters (here, we are pulling "t1")
 data=$(jq -r .set config.json)
