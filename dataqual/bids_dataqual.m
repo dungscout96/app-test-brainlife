@@ -1,13 +1,14 @@
-%function bids_dataqual(dataset)
+function bids_dataqual(dataset)
 
 modeval = 'import';
 modeval = 'read';
 
-addpath('/home/arno/eeglab');
-eeglab
+%addpath('/home/arno/eeglab');
+%eeglab
 tic;
 
-filepath = pwd;
+%filepath = pwd;
+filepath = dataset;
 [~,dsname] = fileparts(filepath);
 outputDir = fullfile('..', [ dsname '-processed']);
 

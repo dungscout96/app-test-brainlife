@@ -15,6 +15,7 @@ RUN ldconfig && mkdir -p /N/u /N/home /N/dc2 /N/soft
 
 RUN useradd -ms /bin/bash octave
 ADD eeglab /home/octave/eeglab
+ADD dataqual /home/octave/dataqual
 ADD app.m /home/octave
 ADD *.set /home/octave
 ADD *.fdt /home/octave
