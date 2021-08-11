@@ -1,5 +1,4 @@
-addpath('/home/octave/eeglab');
-eeglab nogui;
+load_eeglab();
 
 arg_list = argv();
 EEG = pop_loadset(arg_list{1});
