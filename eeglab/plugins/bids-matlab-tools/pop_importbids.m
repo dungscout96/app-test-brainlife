@@ -121,21 +121,21 @@ if isstr(opt), error(opt); end
 % load change file
 changesFile = fullfile(bidsFolder, 'CHANGES');
 bids.CHANGES = '';
-if exist(changesFile,'File')
+if exist(changesFile,'file')
     bids.CHANGES = importalltxt( changesFile );
 end
 
 % load Readme file
 readmeFile = fullfile(bidsFolder, 'README');
 bids.README = '';
-if exist(readmeFile,'File')
+if exist(readmeFile,'file')
     bids.README = importalltxt( readmeFile );
 end
 
 % load dataset description file
 dataset_descriptionFile = fullfile(bidsFolder, 'dataset_description.json');
 bids.dataset_description = '';
-if exist(dataset_descriptionFile,'File')
+if exist(dataset_descriptionFile,'file')
     if exist('jsondecode.m','file')
         bids.dataset_description = jsondecode(importalltxt( dataset_descriptionFile ));
     else
@@ -146,7 +146,7 @@ end
 % load participant file
 participantsFile = fullfile(bidsFolder, 'participants.tsv');
 bids.participants = '';
-if exist(participantsFile,'File')
+if exist(participantsFile,'file')
     bids.participants = importtsv( participantsFile );
 end
 % if no participants.tsv, use subjects folder names as their IDs
@@ -158,7 +158,7 @@ end
 % load participant sidecar file
 participantsJSONFile = fullfile(bidsFolder, 'participants.json');
 bids.participantsJSON = '';
-if exist(participantsJSONFile,'File')
+if exist(participantsJSONFile,'file')
     if exist('jsondecode.m','file')
         bids.participantsJSON = jsondecode(importalltxt( participantsJSONFile ));
     else
