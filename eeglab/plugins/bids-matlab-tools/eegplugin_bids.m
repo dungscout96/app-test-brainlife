@@ -23,6 +23,7 @@ function vers = eegplugin_bids(fig, trystrs, catchstrs)
     if ~exist('pop_importbids')
         addpath( p );
     end
+    addpath([p '/JSONio']);
     
     % find import data menu
     % ---------------------
