@@ -1,5 +1,5 @@
 echo off;
-
+warning off;
 % eeglab_options() - handle EEGLAB options. This script (not function)
 %                    set the various options in the eeg_options() file.
 %
@@ -82,3 +82,5 @@ catch
     lasterr
     disp('Warning: could not access the local eeg_options file');
 end
+
+warning on;

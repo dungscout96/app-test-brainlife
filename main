@@ -6,5 +6,5 @@
 #SBATCH --time=00:15:00
 
 #parse config.json for input parameters (here, we are pulling "t1")
-data=$(jq -r .set config.json)
-singularity exec -e docker://dtyoung/eeglab-pipeline:eeglab octave-cli ./dataqual.m $data
+data=$(jq -r .set config-dataqual.json)
+singularity exec -e docker://dtyoung/eeglab-pipeline:eeglab octave-cli ./bids_dataqual.m $data

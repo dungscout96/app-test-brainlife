@@ -1,9 +1,9 @@
 function bids_dataqual(dataset)
-eeglab
+load_eeglab()
 
-% arg_list = argv();
-% filepath = arg_list{1};
-filepath = dataset;%'/Volumes/LaCie/BIDS/ds002718-download';
+arg_list = argv();
+filepath = arg_list{1};
+%filepath = dataset;%'/Volumes/LaCie/BIDS/ds002718-download';
 modeval = 'import';
 modeval = 'read';
 
@@ -139,12 +139,12 @@ for iDat = 1:length(ALLEEG)
     end
 end
 
-nChans
-percentChanRejected
-percentDataRejected
-percentBrainICs
-asrFail
-icaFail
+%nChans
+%percentChanRejected
+%percentDataRejected
+%percentBrainICs
+%asrFail
+%icaFail
 
 nChans(isnan(nChans)) = [];
 percentChanRejected(isnan(percentChanRejected)) = [];
