@@ -659,3 +659,6 @@ for iCol = 1:size(res,2)
         end
     end
 end
+
+function result = contains(str,pattern)
+    result =  ~isempty(strfind(str, pattern));

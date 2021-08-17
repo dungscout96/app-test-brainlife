@@ -1,9 +1,9 @@
-%function bids_dataqual(dataset)
+function bids_dataqual(dataset)
+eeglab
 
-load_eeglab()
-
-arg_list = argv();
-filepath = arg_list{1};
+% arg_list = argv();
+% filepath = arg_list{1};
+filepath = dataset;%'/Volumes/LaCie/BIDS/ds002718-download';
 modeval = 'import';
 modeval = 'read';
 
@@ -60,9 +60,10 @@ for iDat = 1:length(ALLEEG)
         % check channel locations
         % remove non-EEG channels
         disp('Selecting channels based on type...');
-        chanfile = '/home/arno/eeglab/plugins/dipfit/standard_BEM/elec/standard_1005.elc';
+	dipfit_path = fileparts(which('pop_dipplot'));
+        chanfile = [dipfit_path '/standard_BEM/elec/standard_1005.elc'];
         if ~exist(chanfile,'file')
-            chanfile = '/data/matlab/eeglab/plugins/dipfit/standard_BEM/elec/standard_1005.elc';
+            chanfile = '/home/octave/eeglab/plugins/dipfit4.0/standard_BEM/elec/standard_1005.elc';
         end
         if isfield(EEG.chanlocs, 'theta')
             notEmpty = ~cellfun(@isempty, { EEG.chanlocs.theta });
@@ -176,7 +177,7 @@ res.goodICA   = sprintf('%1.1f-%1.1f', ciBrain(1)*100, ciBrain(2)*100);
 res.asrFail   = sprintf('%d/%d', sum(asrFail), length(asrFail));
 res.icaFail   = sprintf('%d/%d', sum(icaFail), length(icaFail));
 
-fid = fopen(fullfile('../results', [ dsname '_res.txt' ]), 'w');
+fid = fopen(fullfile(filepath, 'result.txt'), 'w');
 if fid ~= -1
     fprintf(fid, '%s\n', res.timeSec);
     fprintf(fid, '%s\n', res.timeHours);
@@ -186,11 +187,11 @@ if fid ~= -1
     fprintf(fid, '%s\n', res.goodChans);
     fprintf(fid, '%s\n', res.goodData);
     fprintf(fid, '%s\n', res.goodICA);
+    fclose(fid);
 end
-fclose(fid);
 
-fid = fopen(fullfile('../results', [ dsname '_res.json' ]), 'w');
+fid = fopen(fullfile(filepath, 'result.json' ), 'w');
 if fid ~= -1
-    fprintf(fid, '%s\n', jsonencode(res));
+    fprintf(fid, '%s\n', jsonwrite(res));
+    fclose(fid);
 end
-fclose(fid);
