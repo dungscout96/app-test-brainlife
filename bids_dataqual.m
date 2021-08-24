@@ -3,36 +3,17 @@ load_eeglab()
 
 arg_list = argv();
 filepath = arg_list{1};
-%filepath = dataset;%'/Volumes/LaCie/BIDS/ds002718-download';
 modeval = 'import';
 modeval = 'read';
 
 tic;
 
-
-% % read or import data
-% %pop_editoptions( 'option_storedisk', 1);
-% useBidsChans = { 'ds002718' 'ds003190' 'ds002578' 'ds002887' 'ds003004' 'ds002833' 'ds002691' 'ds002791' 'ds001787' };
-% studyFile = fullfile(outputDir, 'temp.study');
-% if ~exist(studyFile, 'file') || strcmpi(modeval, 'import')
-%     if exist(outputDir)
-%         system([ 'rm -r --force ' outputDir ]);
-%     end
-%     if ismember(dsname, useBidsChans), bidsChan = 'on'; else bidsChan = 'off'; end
-%     [STUDY, ALLEEG] = pop_importbids(filepath, 'bidsevent','off','bidschanloc', bidsChan,'studyName','temp','outputdir', outputDir);
-% else
-%     tic
-%     [STUDY, ALLEEG] = pop_loadstudy(studyFile);
-% end
-% if any([ ALLEEG.trials ] > 1)
-%     disp('Cannot process data epochs');
-% end
-nChans              = zeros(1, length(ALLEEG))*NaN;
-percentChanRejected = zeros(1, length(ALLEEG))*NaN;
-percentDataRejected = zeros(1, length(ALLEEG))*NaN;
-percentBrainICs     = zeros(1, length(ALLEEG))*NaN;
-asrFail             = zeros(1, length(ALLEEG));
-icaFail             = zeros(1, length(ALLEEG));
+nChans              = 0;
+percentChanRejected = 0;
+percentDataRejected = 0;
+percentBrainICs     = 0;
+asrFail             = 0;
+icaFail             = 0;
 try
     parpool;
 catch
@@ -79,8 +60,7 @@ dipfit_path = fileparts(which('pop_dipplot'));
     EEG = pop_rmbase(EEG, [EEG.times(1) EEG.times(end)]);
     EEG.etc.orinbchan = EEG.nbchan;
     EEG.etc.oripnts   = EEG.pnts;
-
-    if any(any(EEG.data')) % not all data is 0
+    if any(any(any(EEG.data))) % not all data is 0
         % remove bad channels
         disp('Call clean_rawdata...');
         try
@@ -129,34 +109,10 @@ if ~asrFail && ~icaFail
     percentDataRejected = 1-EEG.pnts/EEG.etc.oripnts;
 end
 
-%nChans
-%percentChanRejected
-%percentDataRejected
-%percentBrainICs
-%asrFail
-%icaFail
-
-% nChans(isnan(nChans)) = [];
-% percentChanRejected(isnan(percentChanRejected)) = [];
-% percentDataRejected(isnan(percentDataRejected)) = [];
-% percentBrainICs(isnan(percentBrainICs)) = [];
-% asrFail(isnan(asrFail)) = [];
-% icaFail(isnan(icaFail)) = [];
-% 
-% timeItTook = toc
-% timeItTook2 = timeItTook/3600/24;
-% hoursStr = datestr(timeItTook2, 'HH');
-% minStr   = datestr(timeItTook2, 'MM');
-% 
-% ciChan  = [NaN NaN];
-% ciData  = [NaN NaN];
-% ciBrain = [NaN NaN];
-% try
-%     ciChan = bootci(200, { @mean 1-percentChanRejected }, 'type', 'per');
-%     ciData = bootci(200, { @mean 1-percentDataRejected }, 'type', 'per');
-%     ciBrain = bootci(200, { @mean percentBrainICs }, 'type', 'per');
-% catch
-% end
+timeItTook = toc
+timeItTook2 = timeItTook/3600/24;
+hoursStr = datestr(timeItTook2, 'HH');
+minStr   = datestr(timeItTook2, 'MM');
 
 res.timeSec   = sprintf('%d', round(timeItTook));
 res.timeHours = sprintf('%d:%2.2d', round(timeItTook2)*24+str2num(hoursStr), str2num(minStr));
@@ -167,7 +123,7 @@ res.goodICA   = sprintf('%1.1f', percentBrainICs*100);
 res.asrFail   = sprintf('%d', asrFail);
 res.icaFail   = sprintf('%d', icaFail);
 
-fid = fopen(fullfile(filepath, 'result.txt'), 'w');
+fid = fopen('result.txt', 'w');
 if fid ~= -1
     fprintf(fid, '%s\n', res.timeSec);
     fprintf(fid, '%s\n', res.timeHours);
@@ -180,7 +136,7 @@ if fid ~= -1
     fclose(fid);
 end
 
-fid = fopen(fullfile(filepath, 'result.json' ), 'w');
+fid = fopen('result.json', 'w');
 if fid ~= -1
     fprintf(fid, '%s\n', jsonwrite(res));
     fclose(fid);
