@@ -3,7 +3,7 @@
 #SBATCH --job-name=mytestjob
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=1G
-#SBATCH --time=01:00:00
+#SBATCH --time=06:00:00
 
 module load singularitypro
 #parse config.json for input parameters (here, we are pulling "t1")
