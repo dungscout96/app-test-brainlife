@@ -5,6 +5,10 @@
 #SBATCH --mem=1G
 #SBATCH --time=00:15:00
 
+module load singularitypro
+mount_dir="/mnt"
 #parse config.json for input parameters (here, we are pulling "t1")
-data=$(jq -r .set config-dataqual.json)
-singularity exec -e docker://dtyoung/eeglab-pipeline:eeglab octave-cli ./bids_dataqual.m $data
+data_dir=$(jq -r .dir config-dataqual.json)
+datasetID=$(jq -r .dataset config-dataqual.json)
+data_path="$mount_dir/$datasetID"
+singularity exec --bind $data_dir:$mount_dir -e docker://dtyoung/eeglab-pipeline:eeglab octave-cli ./bids_dataqual.m $data_path

@@ -10,8 +10,8 @@ modeval = 'read';
 tic;
 
 %filepath = pwd;
-[~,dsname] = fileparts(filepath);
-outputDir = fullfile('..', [ dsname '-processed']);
+[root_dir,dsname] = fileparts(filepath);
+outputDir = fullfile(root_dir, 'processed', dsname);
 
 %filepath = '/Users/arno/temp/BIDS_export_p300/BIDS_EXPORT';
 %filepath = '/data/data/STUDIES/BIDS_hw';
