@@ -76,7 +76,7 @@ dipfit_path = fileparts(which('pop_dipplot'));
                 EEG = pop_iclabel(EEG,'default');
                 EEG = pop_icflag(EEG,[0.6 1;NaN NaN;NaN NaN;NaN NaN;NaN NaN;NaN NaN;NaN NaN]);
 
-                pop_saveset(EEG, fullfile(EEG.filepath, processedEEG));
+                pop_saveset(EEG, fullfile(EEG.filepath, 'result', processedEEG));
             catch
                 l = lasterror
                 for iL = 1:length(l.stack)
@@ -123,20 +123,20 @@ res.goodICA   = sprintf('%1.1f', percentBrainICs*100);
 res.asrFail   = sprintf('%d', asrFail);
 res.icaFail   = sprintf('%d', icaFail);
 
-fid = fopen('result.txt', 'w');
-if fid ~= -1
-    fprintf(fid, '%s\n', res.timeSec);
-    fprintf(fid, '%s\n', res.timeHours);
-    fprintf(fid, '%s\n', res.nChans);
-    fprintf(fid, '%s\n', res.asrFail);
-    fprintf(fid, '%s\n', res.icaFail);
-    fprintf(fid, '%s\n', res.goodChans);
-    fprintf(fid, '%s\n', res.goodData);
-    fprintf(fid, '%s\n', res.goodICA);
-    fclose(fid);
-end
+% fid = fopen('result/result.txt', 'w');
+% if fid ~= -1
+%     fprintf(fid, '%s\n', res.timeSec);
+%     fprintf(fid, '%s\n', res.timeHours);
+%     fprintf(fid, '%s\n', res.nChans);
+%     fprintf(fid, '%s\n', res.asrFail);
+%     fprintf(fid, '%s\n', res.icaFail);
+%     fprintf(fid, '%s\n', res.goodChans);
+%     fprintf(fid, '%s\n', res.goodData);
+%     fprintf(fid, '%s\n', res.goodICA);
+%     fclose(fid);
+% end
 
-fid = fopen('result.json', 'w');
+fid = fopen('./result/dataqual.json', 'w');
 if fid ~= -1
     fprintf(fid, '%s\n', jsonwrite(res));
     fclose(fid);
