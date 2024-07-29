@@ -1,4 +1,4 @@
-% pop_readegi() - load a EGI EEG file (pop out window if no arguments).
+% POP_READEGI - load a EGI EEG file (pop out window if no arguments).
 %
 % Usage:
 %   >> EEG = pop_readegi;             % a window pops up
@@ -7,9 +7,9 @@
 %
 % Inputs:
 %   filename       - EGI file name
-%   datachunks     - desired frame numbers (see readegi() help)
+%   datachunks     - desired frame numbers (see READEGI help)
 %                    option available from the command line only
-%   forceversion   - [integer] force reading a specfic file version
+%   forceversion   - [integer] force reading a specific file version
 %   fileloc        - [string] channel location file name. Default is
 %                    'auto' (autodetection)
 %
@@ -18,7 +18,7 @@
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 12 Nov 2002
 %
-% See also: eeglab(), readegi(), readegihdr()
+% See also: EEGLAB, READEGI, READEGIHDR
 
 % Copyright (C) 12 Nov 2002 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -60,7 +60,9 @@ if nargin < 1
     [filename, filepath] = uigetfile('*.RAW;*.raw', ...
         'Choose an EGI RAW file -- pop_readegi()');
     drawnow;
-    if filename == 0 return; end
+    if filename == 0
+        return;
+    end
     filename = [filepath filename];
     
     fid = fopen(filename, 'rb', 'b');
@@ -90,11 +92,13 @@ if nargin < 1
         uigeometry = { [2 1] [2 1] [1] [1] };
         uigeomvert = [1 1 1.5 3];
         result = inputgui('uilist', uilist, 'geometry', uigeometry, 'geomvert', uigeomvert);
-       
-%         promptstr    = { sprintf('Segment/frame number (default: 1:%d)', head.segments) 'Channel location file (in eeglab/sample_locs)' };
-%         inistr       = { '' fileloc(res{2})};
-%         result       = inputdlg2( promptstr, 'Import EGI file -- pop_readegi()', 1,  inistr, 'pop_readegi');
-        if length(result) == 0 return; end
+
+        %         promptstr    = { sprintf('Segment/frame number (default: 1:%d)', head.segments) 'Channel location file (in eeglab/sample_locs)' };
+        %         inistr       = { '' fileloc(res{2})};
+        result = inputdlg2(promptstr, 'Import EGI file -- POP_READEGI', 1, inistr, 'pop_readegi');
+        if isempty(result)
+            return;
+        end
         datachunks   = eval( [ '['  result{1} ']' ] );
         fileloc      = char(fileloc(result{2}));
     else

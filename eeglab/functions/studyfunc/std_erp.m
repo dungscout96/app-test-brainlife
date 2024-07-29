@@ -1,4 +1,4 @@
-% std_erp() -   Constructs and returns channel or ICA activation ERPs for a dataset. 
+% STD_ERP -   Constructs and returns channel or ICA activation ERPs for a dataset. 
 %               Saves the ERPs into a Matlab file, [dataset_name].icaerp, for
 %               data channels or [dataset_name].icaerp for ICA components, 
 %               in the same directory as the dataset file.  If such a file 
@@ -56,7 +56,7 @@
 % OR
 %    [dataset_file].daterp     % channel erp file
 %
-% See also: std_spec(), std_ersp(), std_topo(), std_preclust()
+% See also: STD_SPEC, STD_ERSP, STD_TOPO, STD_PRECLUST
 %
 % Authors: Arnaud Delorme, SCCN, INC, UCSD, January, 2005
 
@@ -87,7 +87,7 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 % THE POSSIBILITY OF SUCH DAMAGE.
 
-function [X, t] = std_erp(EEG, varargin); %comps, timerange)
+function [X, t] = std_erp(EEG, varargin)
 
 if nargin < 1
     help std_erp;
@@ -120,8 +120,8 @@ g = finputcheck(options, { 'components' 'integer' []         [];
                            'trialinfo'  'struct'  []         struct([]);
                            'savetrials' 'string'  { 'on','off' } 'off';
                            'interp'     'struct'  { }        struct([]);
-                           'timerange'  'real'    []         [];        % the timerange option is deprecated and has no effect
-                           'recompute'  'string'  { 'on','off' } 'off' }, 'std_erp');
+                           'timerange',  'real',    [],         [];     
+                           'recompute',  'string',  { 'on', 'off' }, 'off' }, 'std_erp');
 if ischar(g), error(g); end
 if isempty(g.trialindices), g.trialindices = cell(length(EEG)); end
 if ~iscell(g.trialindices), g.trialindices = { g.trialindices }; end
@@ -151,16 +151,21 @@ filename = filenameshort;
 
 % ERP information found in datasets
 % ---------------------------------
-if exist(filename) && strcmpi(g.recompute, 'off') && nargout > 0
+if exist(filename) && strcmpi(g.recompute, 'off')
 
     fprintf('File "%s" found on disk, no need to recompute\n', filenameshort);
-    setinfo.filebase = filename;
-    if strcmpi(prefix, 'comp')
-        [X tmp t] = std_readfile(setinfo, 'components', g.components, 'timelimits', g.timerange, 'measure', 'erp');
+
+    if nargout > 0
+        setinfo.filebase = filename;
+        if strcmpi(prefix, 'comp')
+            [X, ~, t] = std_readfile(setinfo, 'components', g.components, 'timelimits', g.timerange, 'measure', 'erp');
+        else
+            [X, ~, t] = std_readfile(setinfo, 'channels', g.channels,  'timelimits', g.timerange, 'measure', 'erp');
+        end
+        if ~isempty(X), return; end
     else
-        [X tmp t] = std_readfile(setinfo, 'channels', g.channels,  'timelimits', g.timerange, 'measure', 'erp');
+        return; 
     end
-    if ~isempty(X), return; end
     
 end 
    
@@ -180,7 +185,7 @@ end
 %else                        X = TMP.data;
 %end
 if isempty(g.channels)
-     X = eeg_getdatact(EEG, 'component', [1:size(EEG(1).icaweights,1)], 'trialindices', g.trialindices );
+     X = eeg_getdatact(EEG, 'component', 1:size(EEG(1).icaweights,1), 'trialindices', g.trialindices );
 else X = eeg_getdatact(EEG, 'trialindices', g.trialindices, 'rmcomps', g.rmcomps, 'interp', g.interp);
 end
 
@@ -196,10 +201,10 @@ if ~isempty(X)
     if ~isempty(g.rmbase)
         disp('Removing baseline...');
         options = { options{:} 'rmbase' g.rmbase };
-        [tmp timebeg] = min(abs(timevals - g.rmbase(1)));
-        [tmp timeend] = min(abs(timevals - g.rmbase(2)));
+        [~, timebeg] = min(abs(timevals - g.rmbase(1)));
+        [~, timeend] = min(abs(timevals - g.rmbase(2)));
         if ~isempty(timebeg)
-            X = rmbase(X,pnts, [timebeg:timeend]);
+            X = rmbase(X,pnts, timebeg:timeend);
         else
             X = rmbase(X,pnts);
         end

@@ -14,8 +14,8 @@ RUN sh ./install.sh && rm install.sh
 RUN ldconfig && mkdir -p /N/u /N/home /N/dc2 /N/soft
 
 RUN useradd -ms /bin/bash octave
-ADD eeglab /home/octave/eeglab
-ADD load_eeglab.m /home/octave
+# ADD eeglab /home/octave/eeglab
+# ADD load_eeglab.m /home/octave
 RUN chown -R octave:octave /home/octave/
 
 USER octave

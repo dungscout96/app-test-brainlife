@@ -1,4 +1,4 @@
-% std_makedesign() - create a new or edit an existing STUDY.design by 
+% STD_MAKEDESIGN - create a new or edit an existing STUDY.design by 
 %                    selecting specific factors to include in subsequent 
 %                    1x2 or 2x2 STUDY measures and statistical computations 
 %                    for this design. A STUDY may have many factors 
@@ -49,21 +49,6 @@
 %  'values2'  - {cell array of 'strings'} - variable2 values to include in the 
 %               design {default: all}. Here, 'var[12]' must be field names 
 %               in STUDY.datasetinfo or  STUDY.datasetinfo.trialinfo. 
-%  'datselect'  - {cell array} select specific datasets and/or trials: 'datselect',
-%               {'var1' {'vals'}  'var2' {'vas'}}. Selected datasets must 
-%               meet all the specified conditions. For example, 'datselect',  
-%               { 'condition' { 'a' 'b' } 'group' { 'g1' 'g2' } }  will 
-%               select only datasets from conditions 'a' OR 'b' AND only 
-%               subjects in groups 'g1' OR 'g2'. If 'subjselect' is also 
-%               specified, only datasets meeting both criteria are included. 
-%               'variable1' and 'variable2' will only consider
-%               the values after they have passed through 'datselect' and 
-%               'subjselect'. For instance, if conditions { 'a' 'b' 'c' } 
-%               exist and conditions 'a' is removed by 'datselect', the only 
-%               two conditions that will be considered are 'b' and 'c' 
-%               (which is then equivalent to using 'variable1vals' to specify
-%               values for the 'condition' factor. Calls function 
-%               std_selectdataset() {default: select all datasets}
 %  'subjselect' - {cell array} subject codes of specific subjects to include 
 %               in the STUDY design {default: all subjects in the specified 
 %               conditions, groups, etc.} If 'datselect' is also specified,
@@ -280,7 +265,10 @@ end
 % --------------
 datselect = [1:length(STUDY.datasetinfo)];
 if ~isempty(opt.datselect)
-    myfprintf(opt.verbose, 'Data preselection for STUDY design\n');
+    fprintf(2, '**********************************\n')
+    fprintf(2, 'The ''datselect'' option is obsolete\n')
+    fprintf(2, '**********************************\n\n')
+    error('This version of EEGLAB no longer support ''datselect''; please remove it from the list of inputs')
     for ind = 1:2:length(opt.datselect)
         [ dattmp, dattrialstmp ] = std_selectdataset( STUDY, ALLEEG, opt.datselect{ind}, opt.datselect{ind+1});
         datselect      = intersect_bc(datselect, dattmp);
@@ -318,7 +306,7 @@ end
 des.include             = opt.datselect;
 des.cases.label = 'subject';
 des.cases.value = opt.subjselect;
-if isempty(des.cases.value) des.cases.value = STUDY.subject; end
+if isempty(des.cases.value), des.cases.value = STUDY.subject; end
 
 fieldorder = { 'name' 'filepath' 'variable' 'cases' 'include' };
 if ~isfield(des, 'variable'), des.variable = []; end

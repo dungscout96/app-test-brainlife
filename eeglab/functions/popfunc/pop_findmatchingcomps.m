@@ -1,4 +1,4 @@
-% pop_findmatchingcomps() - Find components with the highest 
+% POP_FINDMATCHINGCOMPS - Find components with the highest 
 %                absolute scalp map correlation to components provided or tagged for
 %                rejection in another dataset.
 %
@@ -14,7 +14,7 @@
 %                  marked manually in the other dataset using menu item
 %                  "Tools > Reject data using ICA > Reject components by map")
 %                  Else, ALLEEG index (integer) of another such dataset.
-%   'corrthresh'   - [0<float<=1] minimal absolute ÔmatchingÕ correlation.
+%   'corrthresh'   - [0<float<=1] minimal absolute matching correlation.
 %                  Default is 0.92.
 %   'matchcomps'   - [float array] scalp maps (as in icawinv) of components
 %                  from another decomposition or dataset to be matched to the
@@ -138,8 +138,9 @@ if size(EEG.icawinv,1) ~= size(g.matchcomps,1) && size(EEG.icawinv,1) ~= size(g.
     error( [  'The tagged components do not have the same number of' 10 ...
               'channels as those in the current dataset' ]);
 end
-
-if size(g.matchcomps,1) ~= size(EEG.icawinv,1) g.matchcomps = g.matchcomps'; end
+if size(g.matchcomps, 1) ~= size(EEG.icawinv, 1)
+    g.matchcomps = g.matchcomps';
+end
 [corr,indx] = matcorr(EEG.icawinv', g.matchcomps');
 corrSelected  = corr(1:size(g.matchcomps,2)) > g.corrthresh;
 matchic    = indx(corrSelected);

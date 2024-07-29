@@ -1,4 +1,4 @@
-% pop_newset() - Edit/save EEG dataset structure information.
+% POP_NEWSET - Edit/save EEG dataset structure information.
 %
 % Usage:
 %   >> [ALLEEG EEG CURRENTSET] = pop_newset( ALLEEG, EEG, CURRENTSET,...
@@ -15,13 +15,14 @@
 %   'saveold'     - ['filename'] filename in which to save the old dataset
 %   'savenew'     - ['filename'] filename in which to save the new dataset
 %   'retrieve'    - [index] retrieve the old dataset (ignore recent changes)
+%   'guistring'   - ['string'] text for the GUI
 %
-% Note: Calls eeg_store() which may modify the variable ALLEEG 
+% Note: Calls EEG_STORE which may modify the variable ALLEEG 
 %       containing the current dataset(s).
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 23 Arpil 2002
 %
-% See also: eeg_store(), pop_editset(), eeglab()
+% See also: EEG_STORE, POP_EDITSET, EEGLAB
 
 % Copyright (C) 23 Arpil 2002 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -108,7 +109,7 @@
 % Dataset (modified) selected -> create new dataset (eg. resample) 
 
 function [ALLEEG, EEG, CURRENTSET, com] = pop_newset( ALLEEG, EEG, OLDSET, varargin);
-% pop_newset( ALLEEG, EEG, 1, 'retrieve', [], 'study', [1] (retreiving a study)
+% pop_newset( ALLEEG, EEG, 1, 'retrieve', [], 'study', [1] (Retrieving a study)
 
 verbose = 0;
 if nargin < 3
@@ -118,10 +119,11 @@ end
 CURRENTSET = OLDSET;
 com = sprintf('[ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, %s); ', vararg2str( { OLDSET varargin{:} } ));
 
-[g varargin] = finputcheck(varargin, { ...
-                    'gui'           'string'     { 'on';'off' }   'on'; % []=none; can be multiple numbers
-                    'retrieve'      'integer'    []               []; % []=none; can be multiple numbers
-                    'study'         'integer'    [0 1]            0;  % important because change behavior for modified datasets
+[g, varargin] = finputcheck(varargin, { ...
+    'gui',           'string',   { 'on'; 'off' },  'on';
+    'guistring',     'string',   { },              'What do you want to do with the new dataset?';
+    'retrieve'       'integer'  []                 [];
+    'study'          'integer'  [0 1]              0;
                     }, 'pop_newset', 'ignore');
 if ischar(g), error(g); end
 eeglab_options;
@@ -157,14 +159,15 @@ elseif ~isempty(g.retrieve) % command line call
     %           retrieving another dataset
     % ***************************************************
     if verbose, disp('Case 4'); end
-    if ~(option_storedisk && strcmpi(EEG.saved, 'no'))
-        if strcmpi(EEG.saved, 'yes') && option_storedisk
+    samedat = isequal(EEG, ALLEEG(OLDSET));
+    if ~(option_storedisk && strcmpi(EEG.saved, 'no')) || samedat
+        if strcmpi(EEG.saved, 'yes') && option_storedisk && ~samedat
             fprintf('pop_newset(): Dataset %d has not been modified since last save, so did not resave it.\n', OLDSET);
             EEG = update_datafield(EEG);
         
             tmpsave = EEG.saved;
             EEG = eeg_hist(EEG, com);        
-            [ALLEEG EEG] = eeg_store(ALLEEG, EEG, OLDSET);
+            [ALLEEG, EEG] = eeg_store(ALLEEG, EEG, OLDSET);
             EEG.saved            = tmpsave; % eeg_store automatically set it to 'no'
             ALLEEG(OLDSET).saved = tmpsave;
         end
@@ -181,7 +184,7 @@ if isempty(EEG)
 elseif length(varargin) == 0 && length(EEG) == 1 && strcmpi(g.gui, 'on') % if several arguments, assign values 
     % popup window parameters	
     % -----------------------
-    text_new   = 'What do you want to do with the new dataset?';
+    text_new   = g.guistring;
     comcomment = ['tmpuserdat = get(gcbf, ''userdata'');' ...
 				  'tmpuserdat = pop_comments(tmpuserdat, ''Edit dataset comments'');' ...
 				  'set(gcbf, ''userdata'', tmpuserdat); clear tmpuserdat;'];
@@ -221,7 +224,7 @@ elseif length(varargin) == 0 && length(EEG) == 1 && strcmpi(g.gui, 'on') % if se
     have_to_save_new  = 0;
 
     % ***************************************************
-    % case 5 -> single dataset, has to be saved, one dataset to retreive and study present or several dataset to retrieve
+    % case 5 -> single dataset, has to be saved, one dataset to retrieve and study present or several dataset to retrieve
     % ***************************************************
     if length(g.retrieve) > 1 || ( g.study && ~isempty(g.retrieve)) % selecting several datasets or a study is present
         if verbose, disp('Case 5'); end
@@ -254,7 +257,7 @@ elseif length(varargin) == 0 && length(EEG) == 1 && strcmpi(g.gui, 'on') % if se
         cb_owrt      = [ ...
                        '   set(gcbo, ''value'', 1);' ...
                        '    warndlg2(strvcat(''Cannot unset the overwrite checkbox!'','' '',' ...
-                           '''The old dataset must be overwriten since all datasets'',' ...
+                           '''The old dataset must be overwritten since all datasets'',' ...
                            '''must be in the STUDY.''), ''warning'');' ];
         value_owrt   = 1;
         filenamenew    = fullfile(EEG.filepath, EEG.filename);
@@ -281,7 +284,7 @@ elseif length(varargin) == 0 && length(EEG) == 1 && strcmpi(g.gui, 'on') % if se
                            '''save or delete/overwrite the old dataset.''));' ... 
                        'end;' ];
         enable_saveold = 'on';
-        value_saveold  = 1;
+        value_owrt   = 1;
         overwrite_or_save = 1;
     elseif ~saved
     % ***************************************************
@@ -330,7 +333,8 @@ elseif length(varargin) == 0 && length(EEG) == 1 && strcmpi(g.gui, 'on') % if se
     if isempty(cb_saveold)
         uilist(end-3:end) = [];
         geometry(end)     = [];
-    end;        
+    end
+    
     % update GUI for selecting multiple datasets
     % ------------------------------------------
     if length(g.retrieve) > 1 || ( g.study && ~isempty(g.retrieve)) % selecting several datasets or a study is present
@@ -348,7 +352,7 @@ elseif length(varargin) == 0 && length(EEG) == 1 && strcmpi(g.gui, 'on') % if se
             uilist{end+1} = { 'Style', 'text',       'string', 'Reload copy from disk (will be done after optional saving above)' };
             uilist{end+1} = {};
             uilist{end+1} = {};
-             geometry = { geometry{:} [0.12 1.6 0.2 0.2] };
+             geometry = { geometry{:} [0.2 1.6 0.12 0.2] };
         end
     end
             
@@ -558,7 +562,7 @@ else
             [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG);
         end
     end
-end;        
+end
 
 com = sprintf('[ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, %s); ', vararg2str( { OLDSET args{:} 'gui' 'off' } ));
 return;
@@ -566,12 +570,12 @@ return;
 function num = popask( text )
 	 ButtonName=questdlg2( text, ...
 	        'Confirmation', 'Cancel', 'Yes','Yes');
-	 switch lower(ButtonName),
+	 switch lower(ButtonName)
 	      case 'cancel', num = 0;
 	      case 'yes',    num = 1;
 	 end
 
-function EEG = update_datafield(EEG);
+function EEG = update_datafield(EEG)
     if ~isfield(EEG, 'datfile'), EEG.datfile = ''; end
     if ~isempty(EEG.datfile)
         EEG.data = EEG.datfile;

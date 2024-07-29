@@ -1,4 +1,4 @@
-% pop_readlocs() - load channel location file (pop up an interactive window 
+% POP_READLOCS - load channel location file (pop up an interactive window 
 %                  if no arguments).
 %
 % Usage:
@@ -7,13 +7,13 @@
 %
 % Inputs:
 %   filename       - Electrode location file name
-%   'key',val      - Same options as readlocs() (see >> help readlocs)
+%   'key',val      - Same options as READLOCS (see >> help readlocs)
 % 
-% Outputs: same as readlocs()
+% Outputs: same as READLOCS
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 17 Dec 2002
 %
-% See also: readlocs()
+% See also: READLOCS
 
 % Copyright (C) 17 Dec 2002 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -56,8 +56,11 @@ if nargin < 1
    [filename, filepath] = uigetfile('*.*', 'Importing electrode location file -- pop_readlocs()'); 
    %filename = 'chan32.locs';
    %filepath = 'c:\eeglab\eeglab4.0\';
+   
    drawnow;
-   if filename == 0 return; end
+   if filename == 0
+       return;
+   end
    filename = [filepath filename];
    tmpfile = loadtxt(filename);
    nbcols = cellfun('isempty', tmpfile(end,:));

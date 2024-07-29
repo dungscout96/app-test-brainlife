@@ -1,4 +1,4 @@
-% pop_loadbci() - import a BCI2000 ascii file into EEGLAB
+% POP_LOADBCI - import a BCI2000 ascii file into EEGLAB
 %
 % Usage:
 %   >> OUTEEG = pop_loadbci( filename, srate );
@@ -12,7 +12,7 @@
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 9 July 2002
 %
-% See also: eeglab()
+% See also: EEGLAB
 
 % Copyright (C) 2002 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -50,12 +50,16 @@ function [EEG, command] = pop_loadbci(filename, srate);
         % ask user
         [filename, filepath] = uigetfile('*.*', 'Choose a BCI file -- pop_loadbci'); 
         drawnow;
-        if filename == 0 return; end
+        if filename == 0
+            return;
+        end
         filename = [filepath filename];
         promptstr    = { 'Sampling rate' };
         inistr       = { '256' };
-        result       = inputdlg2( promptstr, 'Import BCI2000 data -- pop_loadbci()', 1,  inistr, 'pop_loadbci');
-        if length(result) == 0 return; end
+        result = inputdlg2(promptstr, 'Import BCI2000 data -- pop_loadbci()', 1, inistr, 'pop_loadbci');
+        if isempty(result)
+            return;
+        end
         srate   = eval( result{1} );
     end
     
@@ -211,7 +215,7 @@ function [EEG, command] = pop_loadbci(filename, srate);
     indexcorresp    = corresp(tmpcorresp);
     indexcorrespval = indeximport(tmpcorresp);
     if length(tmpcorresp) ~= length(intersect(corresp, indeximport))
-        disp('Warning: correspondance problem, some information will be lost');
+        disp('Warning: correspondence problem, some information will be lost');
     end
     
     % remove type from latency array

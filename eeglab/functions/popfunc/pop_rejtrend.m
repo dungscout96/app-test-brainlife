@@ -1,4 +1,4 @@
-% pop_rejtrend() - Measure linear trends in EEG data; reject data epochs 
+% POP_REJTREND - Measure linear trends in EEG data; reject data epochs 
 %                  containing strong trends.
 % Usage:
 %   >> pop_rejtrend( INEEG, typerej); % pop up an interactive window
@@ -32,7 +32,7 @@
 %   elec_comp  - [e1 e2 ...] electrode|component number(s) to take into 
 %                consideration during rejection
 %   winsize    - (integer) number of consecutive points
-%                to use in detecing linear trends
+%                to use in detecting linear trends
 %   maxslope   - maximal absolute slope of the linear trend to allow in the data
 %   minR       - minimal linear regression R-square value to allow in the data
 %                (= coefficient of determination, between 0 and 1)
@@ -46,13 +46,13 @@
 %
 % Outputs:
 %   OUTEEG     - output dataset with rejected trials marked for rejection
-%     Note: When eegplot() is called, modifications are applied to the current 
-%     dataset at the end of the call to eegplot() (e.g., when the user presses 
+%     Note: When EEGPLOT is called, modifications are applied to the current 
+%     dataset at the end of the call to EEGPLOT (e.g., when the user presses 
 %     the 'Reject' button).
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 2001
 %
-% See also: rejtrend(), eeglab(), eegplot(), pop_rejepoch() 
+% See also: REJTREND, EEGLAB, EEGPLOT, POP_REJEPOCH 
 
 % Copyright (C) 2001 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -142,8 +142,10 @@ if nargin < 3
     
     figname = fastif(~icacomp, 'Trend rejection in component(s) -- pop_rejtrend()','Data trend rejection -- pop_rejtrend()');
     result = inputgui( geometry,uilist,'pophelp(''pop_rejtrend'');', figname);
-    size_result  = size( result );
-    if size_result(1) == 0 return; end
+    size_result = size(result);
+    if size_result(1) == 0
+        return;
+    end
     elecrange    = result{1};
     winsize      = result{2};
     minslope     = result{3};
@@ -190,10 +192,12 @@ fprintf('The following trials have been marked for rejection\n');
 fprintf([num2str(rejtrials) '\n']);
 
 if calldisp
-    if icacomp == 1 macrorej  = 'EEG.reject.rejconst';
-        			macrorejE = 'EEG.reject.rejconstE';
-    else			macrorej  = 'EEG.reject.icarejconst';
-        			macrorejE = 'EEG.reject.icarejconstE';
+    if icacomp == 1
+        macrorej  = 'EEG.reject.rejconst';
+        macrorejE = 'EEG.reject.rejconstE';
+    else
+        macrorej  = 'EEG.reject.icarejconst';
+        macrorejE = 'EEG.reject.icarejconstE';
     end
 	colrej = EEG.reject.rejconstcol;
 	eeg_rejmacro; % script macro for generating command and old rejection arrays

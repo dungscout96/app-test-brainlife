@@ -1,4 +1,4 @@
-% pop_limo() - prepare and convert EEGLAB data and structure to be
+% POP_LIMO - prepare and convert EEGLAB data and structure to be
 %              processed by LIMO.
 %
 % Usage:
@@ -12,7 +12,7 @@
 %   'dat'|'ica'  - show the interface for data channels or for ICA. The
 %                  default is to use data.
 %
-% Optional inputs: same as std_limo()
+% Optional inputs: same as STD_LIMO
 %
 % Graphical interface:
 %   "See GLM factors" - [push button] See all the GLM factors or columns in
@@ -28,7 +28,7 @@
 %
 %  "Interaction model for categorical indep. var." - When using more than 
 %                   one categorical variable, clicking this option forces
-%                   to have factors which are the conjonction of the
+%                   to have factors which are the conjunction of the
 %                   different independent var. values. This is useful only 
 %                   if you want to calculate interactions at the subject.
 %                   The 'best' option is typically to have a design with
@@ -45,7 +45,7 @@
 %                   for the GLM. Currently, only "ERP" and "spectrum" are 
 %                   supported.
 %
-%  "Optimization method" - [pop up meny] may be Ordinary Least Squares (OLS), 
+%  "Optimization method" - [pop up menu] may be Ordinary Least Squares (OLS), 
 %                   Weighted Least Squares (WLS), or Iterative Reweighted Least 
 %                   Squares. WTS should be used as it is more robust to trials
 %                   with different time course. OLS is a standard solution and 
@@ -69,7 +69,7 @@
 % Author: Arnaud Delorme, SCCN, UCSD, 2015-
 %         Cyril Pernet, LIMO Team - edit info and defaults
 %
-% See also: std_limo()
+% See also: STD_LIMO
 
 % Copyright (C) Arnaud Delorme
 %
@@ -118,7 +118,24 @@ if nargin > 2
 else
     measureflagindx = 1;
 end
-    
+
+% check for empty relative paths
+for iSet = 1:length(STUDY.datasetinfo)
+    if isempty(STUDY.datasetinfo(iSet).filepath)
+        STUDY.datasetinfo(iSet).filepath = STUDY.filepath;
+        ALLEEG(iSet).filepath = STUDY.filepath;        
+    end
+end
+
+% check that channel location are present
+ALLEEG = eeg_checkset(ALLEEG, 'chanloc');
+
+if isfield(STUDY, 'group') && length(STUDY.group) > 1
+    warndlg2([ 'Your STUDY have groups of subjects. This will only be relevant' 10 ...
+               'for 2nd-level LIMO analysis and will be ignored at the 1st' 10 ...
+               '(single subject) level.'] );
+end
+
 if nargin < 4
     dataMeasures = { 'ERP' 'Spectrum' 'ERSP'};
     fileMeasures = { 'daterp' 'datspec' 'dattimef'; 'icaerp' 'icaspec' 'icatimef'};
@@ -128,18 +145,17 @@ if nargin < 4
                      'else,' ...
                      '   set(findobj(gcbf, ''tag'', ''options''), ''string'', ''''''freqlim'''', [1 25]'');' ...
                      'end;' ];
-    cb_listfactors = [ 'pop_listfactors(STUDY, ''gui'', ''on'', ' ...
-                               '''level'', ''one'',' ...
+    cb_listfactors = [ 'pop_listfactors(STUDY.design(STUDY.currentdesign), ''gui'', ''on'', ' ...
+                               '''level'', ''both'',' ...
                                '''splitreg''   , fastif(get(findobj(gcbf, ''tag'', ''splitreg''   ), ''value''), ''on'', ''off''),' ...
                                '''interaction'', fastif(get(findobj(gcbf, ''tag'', ''interaction''), ''value''), ''on'', ''off''));' ];
     uilist = { ...
         {'style' 'text'       'string' 'LInear MOdeling of EEG data' 'fontweight' 'bold' 'fontsize', 12} ...
         {'style' 'pushbutton' 'string' 'See GLM variables' 'callback' cb_listfactors } ...
-        {'style' 'checkbox'   'string' 'Interaction model for categorical indep. var.' 'value' 0 'tag' 'interaction' } ...
         {'style' 'checkbox'   'string' 'Split regressions (continuous indep. var.)' 'tag' 'splitreg' } {} ...
         {'style' 'text'       'string' 'Input data to use for the GLM' } ...
         {'style' 'popupmenu'  'string' dataMeasures 'tag' 'measure' 'callback' cb_measure} ...
-        {'style' 'text'       'string' 'Optimization method' } ...
+        {'style' 'text'       'string' 'Estimation method' } ...
         {'style' 'popupmenu'  'string' methods 'tag' 'method' } ...
         {'style' 'text'       'string' 'Options' } ...
         {'style' 'edit'       'string' '' 'tag' 'options' } ...
@@ -147,8 +163,8 @@ if nargin < 4
         };
     
     cline = [1.1 0.8];
-    geometry = { [1.6 1] 1 1 1 cline cline cline 1 };
-    geomvert = [ 1 1 1     1 1 1     1     1 ];
+    geometry = { [1.6 1] 1 1 cline cline cline 1 };
+    geomvert = [ 1 1 1     1 1     1     1 ];
         
     [out_param userdat tmp res] = inputgui( 'geometry' , geometry, 'uilist', uilist, 'geomvert', geomvert, ...
                                             'title', 'LInear MOdeling of EEG data -- pop_limo()', 'helpcom', 'pophelp(''pop_limo'');');
@@ -159,8 +175,7 @@ if nargin < 4
     end
     options = { 'method' methods{res.method} 'measure' fileMeasures{measureflagindx,res.measure} opttmp{:} ...
                 'erase'       fastif(res.erase, 'on', 'off') ...
-                'splitreg'    fastif(res.splitreg, 'on', 'off') ...
-                'interaction' fastif(res.interaction, 'on', 'off') };
+                'splitreg'    fastif(res.splitreg, 'on', 'off') };
 else
     options = varargin; 
 end

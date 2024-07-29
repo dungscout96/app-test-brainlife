@@ -1,4 +1,4 @@
-% pop_prop() - plot the properties of a channel or of an independent
+% POP_PROP - plot the properties of a channel or of an independent
 %              component. 
 % Usage:
 %   >> pop_prop( EEG);           % pops up a query window 
@@ -17,8 +17,8 @@
 %                allowing the rejection of the component are drawn. 
 %                If non-zero, this parameter is used to back-propagate
 %                the color of the rejection button.
-%   spectopo_options - [cell array] optional cell arry of options for 
-%                the spectopo() function. 
+%   spectopo_options - [cell array] optional cell array of options for 
+%                the SPECTOPO function. 
 %                For example { 'freqrange' [2 50] }
 % 
 % Note: Type "set(gcf, ''renderer'', ''painter'')" before saving the figure 
@@ -26,7 +26,7 @@
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 2001
 %
-% See also: pop_runica(), eeglab()
+% See also: POP_RUNICA, EEGLAB
 
 % Copyright (C) 2001 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -91,8 +91,10 @@ if nargin == 2
                { 'style' 'edit' 'string' '''freqrange'', [2 50]' } {} };
     uigeom = { [2 1 0.5 ] [2 1 0.5] };
     result = inputgui('geometry', uigeom, 'uilist', uitext, 'helpcom', 'pophelp(''pop_prop'');', ...
-							 'title', fastif( typecomp, 'Channel properties - pop_prop()', 'Component properties - pop_prop()'));
-	if size( result, 1 ) == 0 return; end
+'title', fastif( typecomp, 'Channel properties - pop_prop()', 'Component properties - pop_prop()'));
+if size(result, 1) == 0
+    return;
+end
    
     chanoristr = result{1};
     chanorcomp   = eeg_decodechan(EEG.chanlocs, result{1} );
@@ -352,10 +354,10 @@ if ishandle(winhandle)
 					    'Kurtosis of component activity\t\t%2.2f\n' ...
 					    '> Rejection threshold \t\t%2.2f\n\n' ...
 					    ') OR                  \t\t\t----\n\n' ...
-					    'Kurtosis distibution \t\t\t%2.2f\n' ...
-					    '> Rejection threhold\t\t\t%2.2f\n\n' ...
+					    'Kurtosis distribution \t\t\t%2.2f\n' ...
+					    '> Rejection threshold\t\t\t%2.2f\n\n' ...
 					    '\n' ...
-					    'Current thesholds sujest to %s the component\n\n' ...
+					    'Current thresholds sujest to %s the component\n\n' ...
 					    '(after manually accepting/rejecting the component, you may recalibrate thresholds for future automatic rejection on other datasets)'',' ...
 						'EEG.stats.compenta(' index '), EEG.reject.threshentropy, EEG.stats.compkurta(' index '), ' ...
 						'EEG.reject.threshkurtact, EEG.stats.compkurtdist(' index '), EEG.reject.threshkurtdist, fastif(EEG.reject.gcompreject(' index '), ''REJECT'', ''ACCEPT''));' ...

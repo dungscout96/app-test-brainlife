@@ -1,4 +1,4 @@
-% pop_adjustevents() - Adjust event offset of all (or specified) events
+% POP_ADJUSTEVENTS - Adjust event offset of all (or specified) events
 %
 % Usage:
 % >> EEG = pop_adjustevent(EEG); % launch a GUI
@@ -92,8 +92,10 @@ if nargin < 2
         };
         
     uigeom = { [1 0.7 0.5] [1 0.7 0.5] [1 0.7 0.5]};
-    result = inputgui( 'uilist', uilist, 'geometry', uigeom, 'title', 'Adjust event latencies - pop_adjustevents()');
-    if isempty(result) return; end
+    result = inputgui('uilist', uilist, 'geometry', uigeom, 'title', 'Adjust event latencies - pop_adjustevents()');
+    if isempty(result)
+        return;
+    end
     
     % Collecting inputs
     options = { };

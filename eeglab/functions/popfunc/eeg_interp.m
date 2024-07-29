@@ -1,6 +1,6 @@
-% eeg_interp() - interpolate data channels
+% EEG_INTERP - interpolate data channels
 %
-% Usage: EEGOUT = eeg_interp(EEG, badchans, method);
+% Usage: EEGOUT = eeg_interp(EEG, badchans, method, t_range);
 %
 % Inputs: 
 %     EEG      - EEGLAB dataset
@@ -13,11 +13,34 @@
 %     method   - [string] method used for interpolation (default is 'spherical').
 %                'invdist'/'v4' uses inverse distance on the scalp
 %                'spherical' uses superfast spherical interpolation. 
+%                'sphericalKang' uses Kang et al. 2015 parameters 
 %                'spacetime' uses griddata3 to interpolate both in space 
 %                and time (very slow and cannot be interrupted).
+%     t_range  - [integer array with just two elements] time interval of the
+%                badchans which should be interpolated. First element is
+%                the start time and the second element is the end time.
+%     params   - [1x3 array] Parameters [lambda m n]. Defaults are
+%                'spherical'     -> lambda=0, m = 4, n =7 (Perin et al., 1989)
+%                'sphericalKang' -> lambda=1e-8, m = 3 , n = 50 (Kang et al., 2015)
+%                if the 'params' input is used, then a spherical
+%                interpolation is used with these parameters (method is
+%                ignored). See also https://github.com/sccn/eeglab/issues/500
 % Output: 
 %     EEGOUT   - data set with bad electrode data replaced by
 %                interpolated data
+%
+% Note: See also the sphericalSplineInterpolate function of the clean_rawdata
+%       EEGLAB plugin (in the private folder) which approximate Legendre 
+%       polynomials with up to 500 iteration.                  .
+%
+% References:
+% Perrin, F., Pernier, J., Bertrand, O., & Echallier, J. F. (1989). Spherical 
+% splines for scalp potential and current density mapping. Electroencephalography 
+% and clinical neurophysiology, 72(2), 184–187. https://doi.org/10.1016/0013-4694(89)90180-6
+%
+% Kang, S.S., Lano, T.J. & Sponheim, S.R. Distortions in EEG interregional phase 
+% synchrony by spherical spline interpolation: causes and remedies. Neuropsychiatr 
+% Electrophysiol 1, 9 (2015). https://doi.org/10.1186/s40810-015-0009-5
 %
 % Author: Arnaud Delorme, CERCO, CNRS, Mai 2006-
 
@@ -48,7 +71,7 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 % THE POSSIBILITY OF SUCH DAMAGE.
 
-function EEG = eeg_interp(ORIEEG, bad_elec, method)
+function EEG = eeg_interp(ORIEEG, bad_elec, method, t_range, params)
 
     if nargin < 2
         help eeg_interp;
@@ -60,6 +83,24 @@ function EEG = eeg_interp(ORIEEG, bad_elec, method)
         disp('Using spherical interpolation');
         method = 'spherical';
     end
+    
+    if nargin < 4
+        t_range = [ORIEEG.xmin ORIEEG.xmax];
+    end
+    if nargin < 5
+        if strcmpi(method, 'spherical')
+            params = [0 4 7];
+        elseif strcmpi(method, 'sphericalKang')
+            params = [1e-8 3 50];
+        elseif strcmpi(method, 'sphericalCRD')
+            params = [1e-5 4 500];
+        end
+    else
+        if length(params) ~=3 
+            error('parameters array must have 3 elements')
+        end
+        method = 'spherical';
+    end
 
     % check channel structure
     tmplocs = ORIEEG.chanlocs;
@@ -69,17 +110,25 @@ function EEG = eeg_interp(ORIEEG, bad_elec, method)
     
     if isstruct(bad_elec)
        
+        % remove duplicate channel labels
+        % -------------------------------
+        allLabels = { bad_elec.labels };
+        if length(unique(allLabels)) ~= length(allLabels)
+            [~,uniqueInd] = unique(allLabels);
+            bad_elec = bad_elec(uniqueInd);
+        end
+
         % add missing channels in interpolation structure
         % -----------------------------------------------
         lab1 = { bad_elec.labels };
         tmpchanlocs = EEG.chanlocs;
         lab2 = { tmpchanlocs.labels };
-        [tmp tmpchan] = setdiff_bc( lab2, lab1);
+        [~, tmpchan] = setdiff_bc( lab2, lab1);
         tmpchan = sort(tmpchan);
         
         % From 'bad_elec' using only fields present on EEG.chanlocs
         fields = fieldnames(bad_elec);
-        [tmp, indx1] = setxor(fields,fieldnames(EEG.chanlocs)); clear tmp;
+        [~, indx1] = setxor(fields,fieldnames(EEG.chanlocs)); clear tmp;
         if ~isempty(indx1)
             bad_elec = rmfield(bad_elec,fields(indx1));
             fields = fieldnames(bad_elec);
@@ -103,15 +152,15 @@ function EEG = eeg_interp(ORIEEG, bad_elec, method)
         lab1 = { bad_elec.labels };
         tmpchanlocs = EEG.chanlocs;
         lab2 = { tmpchanlocs.labels };
-        [tmp badchans] = setdiff_bc( lab1, lab2);
+        [~, badchans] = setdiff_bc( lab1, lab2);
         fprintf('Interpolating %d channels...\n', length(badchans));
-        if length(badchans) == 0, return; end
+        if isempty(badchans), return; end
         goodchans      = sort(setdiff(1:length(bad_elec), badchans));
        
         % re-order good channels
         % ----------------------
-        [tmp1 tmp2 neworder] = intersect_bc( lab1, lab2 );
-        [tmp1 ordertmp2] = sort(tmp2);
+        [~, tmp2, neworder] = intersect_bc( lab1, lab2 );
+        [~, ordertmp2] = sort(tmp2);
         neworder = neworder(ordertmp2);
         EEG.data = EEG.data(neworder, :, :);
 
@@ -124,7 +173,7 @@ function EEG = eeg_interp(ORIEEG, bad_elec, method)
         % ---------------------------------------
         if ~isempty(EEG.icasphere)
             
-            [tmp sorti] = sort(neworder);
+            [~, sorti] = sort(neworder);
             EEG.icachansind = sorti(EEG.icachansind);
             EEG.icachansind = goodchans(EEG.icachansind);
             EEG.chaninfo.icachansind = EEG.icachansind;
@@ -154,10 +203,15 @@ function EEG = eeg_interp(ORIEEG, bad_elec, method)
     else
         badchans  = bad_elec;
         goodchans = setdiff_bc(1:EEG.nbchan, badchans);
-        oldelocs  = EEG.chanlocs;
-        EEG       = pop_select(EEG, 'nochannel', badchans);
-        EEG.chanlocs = oldelocs;
-        disp('Interpolating missing channels...');
+        if strcmpi(method, 'sphericalfast')
+            EEG.data(badchans,:) = [];
+            EEG.nbchan = length(goodchans);
+        else
+            oldelocs  = EEG.chanlocs;
+            EEG       = pop_select(EEG, 'nochannel', badchans);
+            EEG.chanlocs = oldelocs;
+            disp('Interpolating missing channels...');
+        end
     end
 
     % find non-empty good channels
@@ -173,7 +227,7 @@ function EEG = eeg_interp(ORIEEG, bad_elec, method)
     
     % scan data points
     % ----------------
-    if strcmpi(method, 'spherical')
+    if strcmpi(method, 'spherical') || strcmpi(method, 'sphericalfast') || strcmpi(method, 'sphericalKang')
         % get theta, rad of electrodes
         % ----------------------------
         tmpgoodlocs = EEG.chanlocs(goodchans);
@@ -192,12 +246,15 @@ function EEG = eeg_interp(ORIEEG, bad_elec, method)
         xbad = xbad./rad;
         ybad = ybad./rad;
         zbad = zbad./rad;
-        
+        if isempty(xbad)
+            error('Trying to interpolate a channel without coordinates assigned to it');
+        end
+
         EEG.data = reshape(EEG.data, EEG.nbchan, EEG.pnts*EEG.trials);
         %[tmp1 tmp2 tmp3 tmpchans] = spheric_spline_old( xelec, yelec, zelec, EEG.data(goodchans,1));
         %max(tmpchans(:,1)), std(tmpchans(:,1)), 
         %[tmp1 tmp2 tmp3 EEG.data(badchans,:)] = spheric_spline( xelec, yelec, zelec, xbad, ybad, zbad, EEG.data(goodchans,:));
-        [tmp1 tmp2 tmp3 badchansdata] = spheric_spline( xelec, yelec, zelec, xbad, ybad, zbad, EEG.data(datachans,:));
+        [tmp1 tmp2 tmp3 badchansdata] = spheric_spline( xelec, yelec, zelec, xbad, ybad, zbad, EEG.data(datachans,:), params);
         %max(EEG.data(goodchans,1)), std(EEG.data(goodchans,1))
         %max(EEG.data(badchans,1)), std(EEG.data(badchans,1))
         EEG.data = reshape(EEG.data, EEG.nbchan, EEG.pnts, EEG.trials);
@@ -209,19 +266,18 @@ function EEG = eeg_interp(ORIEEG, bad_elec, method)
         [xbad ,ybad]  = pol2cart([tmpbadlocs.theta],[tmpbadlocs.radius]);
         [xgood,ygood] = pol2cart([tmpgoodlocs.theta],[tmpgoodlocs.radius]);
         pnts = size(EEG.data,2)*size(EEG.data,3);
-        zgood = [1:pnts];
+        zgood = 1:pnts;
         zgood = repmat(zgood, [length(xgood) 1]);    
-        zgood = reshape(zgood,prod(size(zgood)),1);
-        xgood = repmat(xgood, [1 pnts]); xgood = reshape(xgood,prod(size(xgood)),1);
-        ygood = repmat(ygood, [1 pnts]); ygood = reshape(ygood,prod(size(ygood)),1);
-        tmpdata = reshape(EEG.data, prod(size(EEG.data)),1);
+        zgood = reshape(zgood,numel(zgood),1);
+        xgood = repmat(xgood, [1 pnts]); xgood = reshape(xgood,numel(xgood),1);
+        ygood = repmat(ygood, [1 pnts]); ygood = reshape(ygood,numel(ygood),1);
+        tmpdata = reshape(EEG.data(datachans,:,:), numel(EEG.data(datachans,:,:)),1);
         zbad = 1:pnts;
         zbad = repmat(zbad, [length(xbad) 1]);     
-        zbad = reshape(zbad,prod(size(zbad)),1);
-        xbad = repmat(xbad, [1 pnts]); xbad = reshape(xbad,prod(size(xbad)),1);
-        ybad = repmat(ybad, [1 pnts]); ybad = reshape(ybad,prod(size(ybad)),1);
-        badchansdata = griddata3(ygood, xgood, zgood, tmpdata,...
-                                              ybad, xbad, zbad, 'nearest'); % interpolate data                                            
+        zbad = reshape(zbad,numel(zbad),1);
+        xbad = repmat(xbad, [1 pnts]); xbad = reshape(xbad,numel(xbad),1);
+        ybad = repmat(ybad, [1 pnts]); ybad = reshape(ybad,numel(ybad),1);
+        badchansdata = griddatan([ygood, xgood, zgood], tmpdata,[ybad, xbad, zbad], 'nearest'); % interpolate data                                            
     else 
         % get theta, rad of electrodes
         % ----------------------------
@@ -254,11 +310,25 @@ function EEG = eeg_interp(ORIEEG, bad_elec, method)
     if length(size(tmpdata))==3
         badchansdata = reshape(badchansdata,length(badchans),size(tmpdata,2),size(tmpdata,3));
     end
+
+    if ~isempty(t_range)
+        t_start = t_range(1);
+        t_end   = t_range(2);
+        if t_start~=ORIEEG.xmin || t_end~=ORIEEG.xmax
+            if length(size(tmpdata))==2
+                times_2b_ignored = [1:floor(t_start*ORIEEG.srate), floor(t_end*ORIEEG.srate):floor(ORIEEG.xmax*ORIEEG.srate)];
+                badchansdata(:, times_2b_ignored) = ORIEEG.data(badchans, times_2b_ignored);
+            end
+        end
+    end
+
     tmpdata(badchans,:,:) = badchansdata;
     EEG.data = tmpdata;
     EEG.nbchan = size(EEG.data,1);
-    EEG = eeg_checkset(EEG);
-
+    if ~strcmpi(method, 'sphericalfast')
+        EEG = eeg_checkset(EEG);
+    end
+    
 % get data channels
 % -----------------
 function datachans = getdatachans(goodchans, badchans);
@@ -271,47 +341,47 @@ function datachans = getdatachans(goodchans, badchans);
 % -----------------
 % spherical splines
 % -----------------
-function [x, y, z, Res] = spheric_spline_old( xelec, yelec, zelec, values);
+% function [x, y, z, Res] = spheric_spline_old( xelec, yelec, zelec, values)
+% 
+% SPHERERES = 20;
+% [x,y,z] = sphere(SPHERERES);
+% x(1:(length(x)-1)/2,:) = []; x = [ x(:)' ];
+% y(1:(length(y)-1)/2,:) = []; y = [ y(:)' ];
+% z(1:(length(z)-1)/2,:) = []; z = [ z(:)' ];
+% 
+% Gelec = computeg(xelec,yelec,zelec,xelec,yelec,zelec);
+% Gsph  = computeg(x,y,z,xelec,yelec,zelec);
+% 
+% % equations are 
+% % Gelec*C + C0  = Potential (C unknown)
+% % Sum(c_i) = 0
+% % so 
+% %             [c_1]
+% %      *      [c_2]
+% %             [c_ ]
+% %    xelec    [c_n]
+% % [x x x x x]         [potential_1]
+% % [x x x x x]         [potential_ ]
+% % [x x x x x]       = [potential_ ]
+% % [x x x x x]         [potential_4]
+% % [1 1 1 1 1]         [0]
+% 
+% % compute solution for parameters C
+% % ---------------------------------
+% meanvalues = mean(values); 
+% values = values - meanvalues; % make mean zero
+% C = pinv([Gelec;ones(1,length(Gelec))]) * [values(:);0];
+% 
+% % apply results
+% % -------------
+% Res = zeros(1,size(Gsph,1));
+% for j = 1:size(Gsph,1)
+%     Res(j) = sum(C .* Gsph(j,:)');
+% end
+% Res = Res + meanvalues;
+% Res = reshape(Res, length(x(:)),1);
 
-SPHERERES = 20;
-[x,y,z] = sphere(SPHERERES);
-x(1:(length(x)-1)/2,:) = []; x = [ x(:)' ];
-y(1:(length(y)-1)/2,:) = []; y = [ y(:)' ];
-z(1:(length(z)-1)/2,:) = []; z = [ z(:)' ];
-
-Gelec = computeg(xelec,yelec,zelec,xelec,yelec,zelec);
-Gsph  = computeg(x,y,z,xelec,yelec,zelec);
-
-% equations are 
-% Gelec*C + C0  = Potential (C unknow)
-% Sum(c_i) = 0
-% so 
-%             [c_1]
-%      *      [c_2]
-%             [c_ ]
-%    xelec    [c_n]
-% [x x x x x]         [potential_1]
-% [x x x x x]         [potential_ ]
-% [x x x x x]       = [potential_ ]
-% [x x x x x]         [potential_4]
-% [1 1 1 1 1]         [0]
-
-% compute solution for parameters C
-% ---------------------------------
-meanvalues = mean(values); 
-values = values - meanvalues; % make mean zero
-C = pinv([Gelec;ones(1,length(Gelec))]) * [values(:);0];
-
-% apply results
-% -------------
-Res = zeros(1,size(Gsph,1));
-for j = 1:size(Gsph,1)
-    Res(j) = sum(C .* Gsph(j,:)');
-end
-Res = Res + meanvalues;
-Res = reshape(Res, length(x(:)),1);
-
-function [xbad, ybad, zbad, allres] = spheric_spline( xelec, yelec, zelec, xbad, ybad, zbad, values);
+function [xbad, ybad, zbad, allres] = spheric_spline( xelec, yelec, zelec, xbad, ybad, zbad, values, params)
 
 newchans = length(xbad);
 numpoints = size(values,2);
@@ -322,8 +392,8 @@ numpoints = size(values,2);
 %y(1:(length(x)-1)/2,:) = []; ybad = [ y(:)'];
 %z(1:(length(x)-1)/2,:) = []; zbad = [ z(:)'];
 
-Gelec = computeg(xelec,yelec,zelec,xelec,yelec,zelec);
-Gsph  = computeg(xbad,ybad,zbad,xelec,yelec,zelec);
+Gelec = computeg(xelec,yelec,zelec,xelec,yelec,zelec,params);
+Gsph  = computeg(xbad,ybad,zbad,xelec,yelec,zelec,params);
 
 % compute solution for parameters C
 % ---------------------------------
@@ -331,7 +401,10 @@ meanvalues = mean(values);
 values = values - repmat(meanvalues, [size(values,1) 1]); % make mean zero
 
 values = [values;zeros(1,numpoints)];
-C = pinv([Gelec;ones(1,length(Gelec))]) * values;
+lambda = params(1);
+C = pinv([Gelec+eye(size(Gelec))*lambda;ones(1,length(Gelec))]) * values;
+%C = pinv([Gelec;ones(1,length(Gelec))]) * values;
+
 clear values;
 allres = zeros(newchans, numpoints);
 
@@ -344,7 +417,7 @@ allres = allres + repmat(meanvalues, [size(allres,1) 1]);
 
 % compute G function
 % ------------------
-function g = computeg(x,y,z,xelec,yelec,zelec)
+function g = computeg(x,y,z,xelec,yelec,zelec, params)
 
 unitmat = ones(length(x(:)),length(xelec));
 EI = unitmat - sqrt((repmat(x(:),1,length(xelec)) - repmat(xelec,length(x(:)),1)).^2 +... 
@@ -352,9 +425,10 @@ EI = unitmat - sqrt((repmat(x(:),1,length(xelec)) - repmat(xelec,length(x(:)),1)
                 (repmat(z(:),1,length(xelec)) - repmat(zelec,length(x(:)),1)).^2);
 
 g = zeros(length(x(:)),length(xelec));
-%dsafds
-m = 4; % 3 is linear, 4 is best according to Perrin's curve
-for n = 1:7
+m = params(2);
+maxn = params(3);
+
+for n = 1:maxn % 200
     if ismatlab
         L = legendre(n,EI);
     else % Octave legendre function cannot process 2-D matrices

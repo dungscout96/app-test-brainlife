@@ -1,4 +1,4 @@
-% gethelpvar() - convert a Matlab m-file help-message header 
+% GETHELPVAR - convert a Matlab m-file help-message header 
 %               into out variables 
 % Usage:
 %  >> [vartext, varnames] = gethelpvar( filein, varlist);
@@ -6,19 +6,19 @@
 % Inputs:
 %   filein     - input filename  (with .m extension)
 %   varlist    - optional list of variable to return. If absent
-%                retrun all variables.
+%                return all variables.
 %
 % Outputs:
 %   vartext     - variable text
-%   varnames    - name of the varialbe returned;
+%   varnames    - name of the variable returned;
 %
-% Notes: see help2html() for file format
+% Notes: see HELP2HTML for file format
 %
 % Example: >> gethelpvar( 'gethelpvar.m', 'filein')
 %
 % Author:  Arnaud Delorme, Salk Institute 20 April 2002
 %
-% See also: help2html()
+% See also: HELP2HTML
 
 % Copyright (C) 2001 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -62,6 +62,7 @@ if fid == -1
 end
 
 cont = 1;
+
 % scan file
 % -----------
 str = fgets( fid );
@@ -115,8 +116,8 @@ while (str(1) == '%')
 	  % not a title
 	  % ------------
          % scan lines
-         [tok1 strrm] = strtok( str );
-         [tok2 strrm] = strtok( strrm );
+         [tok1, strrm] = strtok( str );
+         [tok2, strrm] = strtok( strrm );
 
          if ~isempty(tok2) && ( isequal(tok2,'-') || isequal(tok2,'=')) % new variable 
             newvar = 1;
@@ -138,10 +139,10 @@ while (str(1) == '%')
                vartext = str;
             else	
                if ~isempty(varname) 
-               	    vartext = [ vartext 10 str]; % espace if in array
+               	    vartext = [ vartext 10 str]; % space if in array
                else 
                		if length(vartext)>3 && all(vartext(	end-2:end) == '.')
-               			vartext = [ deblank2(vartext(1:end-3)) 10 str]; % espace if '...'
+               			vartext = [ deblank2(vartext(1:end-3)) 10 str]; % space if '...'
                		else
                     	vartext = [ vartext 10 str];    % CR otherwise
                     end;	
@@ -249,13 +250,13 @@ return;
 % -----------------
 % sub-functions
 % -----------------
-function str = deblank2( str ); % deblank two ways
+function str = deblank2( str )
    str = deblank(str(end:-1:1));    % remove initial blanks
    str = deblank(str(end:-1:1));	% remove tail blanks 
 return;
 
-function strout = formatstr( str, refcall );
-		[tok1 strrm] = strtok( str );
+function strout = formatstr( str, refcall )
+		[tok1, strrm] = strtok( str );
 		strout = [];
 		while ~isempty(tok1)
 			tokout = functionformat( tok1, refcall );
@@ -263,33 +264,39 @@ function strout = formatstr( str, refcall );
 				strout = tokout; 	
 			else
 				strout = [strout ' ' tokout ]; 	
-			end;	
-			[tok1 strrm] = strtok( strrm );
+            end
+			[tok1, strrm] = strtok( strrm );
 		end
 return;	
  
-function tokout = functionformat( tokin, refcall );
+function tokout = functionformat( tokin, refcall )
 	tokout = tokin;	% default
 	[test, realtokin, tail] = testfunc1( tokin );
 	if ~test,  [test, realtokin, tail] = testfunc2( tokin ); end
 	if test
-		i1 = findstr( refcall, '%s');
-		i2 = findstr( refcall(i1(1):end), '''');
-		if isempty(i2) i2 = length( refcall(i1(1):end) )+1; end
+        i1 = findstr( refcall, '%s');
+        i2 = findstr(refcall(i1(1):end), '''');
+        if isempty(i2)
+            i2 = length(refcall(i1(1):end)) + 1;
+        end
 		filename  = [ realtokin refcall(i1+2:i1+i2-2)];
 		if exist( filename ) % do not make link if the file does not exist 
 			tokout =  sprintf( [ '<A HREF="' refcall '">%s</A>' tail ' ' ], realtokin, realtokin );
 		end
-	end;		
+    end
 return;
 
-function [test, realtokin, tail] = testfunc1( tokin ) % test if is string is 'function()[,]'  
-	test = 0; realtokin = ''; tail = '';
-	if ~isempty( findstr( tokin, '()' ) )
-		realtokin = tokin( 1:findstr( tokin, '()' )-1);
-		if length(realtokin) < (length(tokin)-2) tail = tokin(end); else tail = []; end
-		test = 1;
-	end
+function [test, realtokin, tail] = testfunc1( tokin ) % test if is string is 'function()[,]'
+test = 0; realtokin = ''; tail = '';
+if ~isempty( findstr( tokin, '()' ) )
+    realtokin = tokin(1:findstr(tokin, '()') - 1);
+    if length(realtokin) < (length(tokin) - 2)
+        tail = tokin(end);
+    else
+        tail = [];
+    end
+    test = 1;
+end
 return;
 
 function [test, realtokin, tail] = testfunc2( tokin ) % test if is string is 'FUNCTION[,]'  
@@ -306,7 +313,7 @@ function [test, realtokin, tail] = testfunc2( tokin ) % test if is string is 'FU
 		testokin(findstr(testokin, '2')) = 'A';
 		if all(double(testokin) > 64) && all(double(testokin) < 91)
 			test = 1;
-		end;				
+        end
 		realtokin = lower(realtokin);
 	end
 return;	

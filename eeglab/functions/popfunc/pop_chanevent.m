@@ -1,4 +1,4 @@
-% pop_chanevent() - import event latencies from the rising and/or falling 'edge' 
+% POP_CHANEVENT - import event latencies from the rising and/or falling 'edge' 
 %                   latencies of a specified event-marker channel in EEG.data 
 % Usage:
 %   >> OUTEEG = pop_chanevent( INEEG ); % select parameters via a pop-up window
@@ -51,7 +51,7 @@
 %                    at each time point (returning 1 if the data channel value 
 %                    is larger than 3, and 0 otherwise). You may also use 
 %                    any function (Ex: 'myfunction(X)'). If an equal character
-%                    is not present, this function preprend 'X=' to your 
+%                    is not present, this function prepend 'X=' to your 
 %                    expression before evaluating it. Otherwise it just 
 %                    evaluate the expression. For example, one may use
 %                    'if X(1)>100,X(1)=0;end; X(find(X>100))=X(find(X>100)-1);'
@@ -76,7 +76,7 @@
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 29 July 2002
 %
-% See also: eeglab()
+% See also: EEGLAB
 
 % Copyright (C) 2002 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -160,16 +160,17 @@ if nargin < 2
                  '0 0 1 0 2 0 ...  produces event types 1 and 2).' ] } ...
 			   { 'style' 'checkbox' 'value' 0 } { } };
 	result       = inputgui( geometry, strgui, 'pophelp(''pop_chanevent'');', 'Extract event from channel(s) - pop_chanevent()');
-	
-	if length(result) == 0 return; end
+    if isempty(result)
+        return;
+    end
 	chan   = eval( [ '[' result{1} ']' ] );
     options = {};
 	if ~isempty(result{2}), options = { options{:} 'oper' result{2} }; end
-	switch result{3},
+	switch result{3}
 		case 1, options = { options{:} 'edge' 'leading' };
 		case 2, options = { options{:} 'edge' 'both' };
 		case 3, options = { options{:} 'edge' 'trailing' };
-	end; 
+	end 
     options = { options{:} 'edgelen' eval( [ '[' result{4} ']' ] ) };
     if result{5},  options = { options{:} 'duration' 'on' }; end
 	if ~result{6}, options = { options{:} 'delchan'  'off'}; end
@@ -189,7 +190,7 @@ listcheck = { 'edge'      'string'     { 'both';'leading';'trailing'}     'both'
 g = finputcheck( options, listcheck, 'pop_chanedit');
 if ischar(g), error(g); end
 
-% check inut consistency
+% check input consistency
 % ----------------------
 if strcmpi(g.duration, 'on') && ~strcmpi(g.edge, 'leading')
     error('Must detect leading edge to extract event duration');
@@ -217,7 +218,7 @@ for ci = chan
         try, eval( g.oper );
         catch, error('pop_chanevent: error executing preprocessing string');
         end
-    end;    
+    end    
     
     % extract edges
     % -------------

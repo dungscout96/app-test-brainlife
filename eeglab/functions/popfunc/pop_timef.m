@@ -1,4 +1,4 @@
-% pop_timef() - Returns estimates and plots of event-related (log) spectral
+% POP_TIMEF - Returns estimates and plots of event-related (log) spectral
 %           perturbation (ERSP) and inter-trial coherence (ITC) changes 
 %           timelocked to a set of input events in one data channel. 
 %
@@ -19,14 +19,14 @@
 %               0 -> Use FFTs (with constant window length)
 %
 % Optional inputs:
-%    See the timef() function.
+%    See the TIMEF function.
 %    
-% Outputs: same as timef(), no outputs are returned when a
+% Outputs: same as TIMEF, no outputs are returned when a
 %          window pops-up to ask for additional arguments
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 2001
 %
-% See also: timef(), eeglab() 
+% See also: TIMEF, EEGLAB 
 
 % Copyright (C) 2002 arno@salk.edu, Arnaud Delorme, CNL / Salk Institute
 %
@@ -69,7 +69,7 @@ varargout{1} = '';
 if nargin < 2
 	help pop_timef;
 	return;
-end;	
+end
 lastcom = [];
 if nargin < 3
 	popup = 1;
@@ -83,7 +83,7 @@ end
 % pop up window
 % -------------
 if popup
-	[txt vars] = gethelpvar('timef.m');
+	[txt, vars] = gethelpvar('timef.m');
 	
 	geometry = { [1 0.5 0.5] [1 0.5 0.5] [1 0.5 0.5] [0.92 0.1 0.78] [1 0.5 0.5] [1 0.8 0.2] [1] [1 1]};
     uilist = { ...
@@ -123,7 +123,9 @@ if popup
 	result = inputgui( geometry, uilist, 'pophelp(''pop_timef'');', ...
 					   fastif(typeproc, 'Plot channel time frequency -- pop_timef()', ...
 							  'Plot component time frequency -- pop_timef()'));
-	if length( result ) == 0 return; end
+	if isempty( result ) 
+        return; 
+    end
 
 	num	     = eval( [ '[' result{1} ']' ] ); 
 	tlimits	 = eval( [ '[' result{2} ']' ] ); 
@@ -132,7 +134,7 @@ if popup
     	options = [ ',''type'', ''coher''' ];
     else
 		options = [',''type'', ''phasecoher''' ];
-    end;	
+    end	
 	
     % add topoplot
     % ------------
@@ -183,7 +185,7 @@ end
 % --------------------
 if isempty(tlimits)
 	tlimits = [EEG.xmin, EEG.xmax]*1000;
-end;	
+end	
 pointrange1 = round(max((tlimits(1)/1000-EEG.xmin)*EEG.srate, 1));
 pointrange2 = round(min((tlimits(2)/1000-EEG.xmin)*EEG.srate, EEG.pnts));
 pointrange = [pointrange1:pointrange2];
@@ -197,8 +199,8 @@ else
         tmpsig = eeg_getdatact(EEG, 'component', num, 'samples', pointrange); 
 	else
 		error('You must run ICA first');
-	end;	
-end;	 
+	end	
+end	 
 
 % outputs
 % -------

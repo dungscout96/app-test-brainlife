@@ -1,7 +1,7 @@
-% pop_envtopo() - Plot envelope of an averaged EEG epoch, plus scalp maps 
+% POP_ENVTOPO - Plot envelope of an averaged EEG epoch, plus scalp maps 
 %                 of specified or largest contributing components referenced 
 %                 to their time point of maximum variance in the epoch or specified
-%                 sub-epoch. Calls envtopo(). When nargin < 3, a query window 
+%                 sub-epoch. Calls ENVTOPO. When nargin < 3, a query window 
 %                 pops-up to allow additional arguments.
 % Usage:
 %   >> pop_envtopo( EEG ); % pop-up window mode
@@ -15,15 +15,15 @@
 %   timerange  - [min max] time range (in ms) in epoch to plot, or if [], from EEG
 %
 % Optional inputs:
-%   'key','val' - optional envtopo() and topoplot() arguments 
-%                 (see >> help topoplot())
+%   'key','val' - optional ENVTOPO and TOPOPLOT arguments 
+%                 (see >> help TOPOPLOT)
 %
-% Outputs: Same as envtopo(). When nargin < 3, a query window pops-up 
+% Outputs: Same as ENVTOPO. When nargin < 3, a query window pops-up 
 %          to ask for additional arguments and no outputs are returned.
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 2001
 %
-% See also: envtopo(), eeglab()
+% See also: ENVTOPO, EEGLAB
 
 % Copyright (C) 2001 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -53,7 +53,7 @@
 % THE POSSIBILITY OF SUCH DAMAGE.
 
 % 01-25-02 reformatted help & license -ad 
-% 03-16-02 added all topoplot() options -ad
+% 03-16-02 added all TOPOPLOT options -ad
 % 03-18-02 added title -ad & sm
 
 function varargout = pop_envtopo( EEG, timerange, varargin);
@@ -89,15 +89,17 @@ if nargin < 3
 	                 [num2str( EEG(end).xmin*1000) ' ' num2str(EEG(end).xmax*1000)], ...
                      '7', ...
 	                 '', ...
-                     int2str(find(EEG.reject.gcompreject)), ...
+                     int2str(find(EEG(end).reject.gcompreject)), ...
 	                 ['Largest ERP components' fastif(isempty(EEG(end).setname), '',[' of ' EEG(end).setname])] ...
 	                 '''electrodes'',''off''' };
     if length(EEG) > 1
         promptstr = { 'Dataset indices to subtract (Ex: ''1 2''-> 1-2)' promptstr{:} };
         inistr    = { '2 1' inistr{:} };
     end
-    result = inputdlg2( promptstr, 'Plot component and ERP envelopes -- pop_envtopo()', 1, inistr, 'pop_envtopo');
-    if length(result) == 0 return; end
+    result = inputdlg2(promptstr, 'Plot component and ERP envelopes -- pop_envtopo()', 1, inistr, 'pop_envtopo');
+    if isempty(result)
+        return;
+    end
 
     if length(EEG) > 1
         subindices = eval( [ '[' result{1} ']' ] );
@@ -202,7 +204,7 @@ else
     end
 end
 
-% fprintf(['\npop_envtopo(): Issuing command: ' com '\n\n']); % type the evntopo() call
+% fprintf(['\NPOP_ENVTOPO: Issuing command: ' com '\n\n']); % type the EVNTOPO call
 
 eval(com); % make the plot using envtopo()
 

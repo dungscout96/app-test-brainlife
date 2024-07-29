@@ -1,4 +1,4 @@
-% corrimage() - compute correlation image between an event and amplitude
+% CORRIMAGE - compute correlation image between an event and amplitude
 %               and phase in the time-frequency domain.
 %
 % Usage: 
@@ -32,14 +32,14 @@
 %                to retain. i.e. [5 95] remove the 5 lowest and highest 
 %                percentile of sortvar values (and associated data) before
 %                computing statistics. Default is [0 100].
-%   'align'    - [float] same as 'align' parameter of erpimage(). This 
-%                parameter is used to contrain the 'times' parameter so
+%   'align'    - [float] same as 'align' parameter of ERPIMAGE. This 
+%                parameter is used to constrain the 'times' parameter so
 %                correlation with data trials containing 0-values (as a
 %                result of data alignment) are avoided: computing these
 %                correlations would produce spurious significant results.
 %                Default is no alignment.
-%   'method'   - ['erpimage'|timefreq'] use either the erpimage() function
-%                of the timefreq() function to compute spectral decomposition.
+%   'method'   - ['erpimage'|timefreq'] use either the ERPIMAGE function
+%                of the TIMEFREQ function to compute spectral decomposition.
 %                Default is 'timefreq' for speed reasons (note that both 
 %                methods should return the same results).
 %   'erpout'   - [min max] regress out ERP using the selected time-window [min
@@ -85,7 +85,7 @@
 % Author: Arnaud Delorme & Scott Makeig, SCCN UCSD, 
 %         and CNL Salk Institute, 18 April 2003
 %
-% See also: erpimage()
+% See also: ERPIMAGE
 
 %123456789012345678901234567890123456789012345678901234567890123456789012
 
@@ -127,24 +127,25 @@ if isempty(timevect), timevect = [1 2]; end
 
 % check inputs
 % ------------
-g = finputcheck(varargin, { 'freqs'    'real'   [0 Inf]    [2.5 50 50];
-                            'times'    'real'   []         [100 5]; % see function at the end
-                            'mode'     'string' { 'phase','amp' }  'amp'; 
-                            'vert'     'real'   []         [];
-                            'align'    { 'real','cell' }   []         []; 
-                            'plotvals' 'cell'   []         {}; 
-                            'pmask'    'real'   []         0.00001; 
-                            'triallimit' 'integer'   []       []; 
-                            'trim'     'real'   [0 100]    [0 100]; 
-                            'limits'   'real'   []         [];
-                            'method'   'string' { 'erpimage','timefreq' }        'timefreq';
-                            'plot'     'string' { 'no','alpha','sigout','sigoutm','sigoutp','sigoutm2' }  'sigoutm'; 
-                            'nofig'    'string' { 'on','off' } 'off';
-                            'cbar'     'string' { 'on','off' } 'on';
-                            'smooth'   'string' { 'on','off' } 'off';
-                            'erpout'   'real'   []             [];
-                            'tfopt'    'cell'   []             {};
-                            'erpimopt' 'cell'   []             {} });
+g = finputcheck(varargin, { ...
+    'freqs'    'real'   [0 Inf]    [2.5 50 50];
+    'times',    'real',   [],         [100 5];
+    'mode',     'string', { 'phase', 'amp' }, 'amp';
+    'vert'     'real'   []         [];
+    'align'    { 'real','cell' }   []         [];
+    'plotvals' 'cell'   []         {};
+    'pmask'    'real'   []         0.00001;
+    'triallimit' 'integer'   []       [];
+    'trim'     'real'   [0 100]    [0 100];
+    'limits'   'real'   []         [];
+    'method'   'string' { 'erpimage','timefreq' }        'timefreq';
+    'plot'     'string' { 'no','alpha','sigout','sigoutm','sigoutp','sigoutm2' }  'sigoutm';
+    'nofig'    'string' { 'on','off' } 'off';
+    'cbar'     'string' { 'on','off' } 'on';
+    'smooth'   'string' { 'on','off' } 'off';
+    'erpout'   'real'   []             [];
+    'tfopt'    'cell'   []             {};
+    'erpimopt' 'cell'   []             {} });
 if ischar(g), error(g); end
 
 fprintf('Generating %d frequencies in log scale (ignore message on linear scale)\n', g.freqs(2));
@@ -367,9 +368,9 @@ elseif isempty(g.plotvals)
             end
         
             % computing ITCs
-            [ypred alpha(freq, time) Rsq slope(freq, time)] = myregress(outvar, 20*log10(phsamp));
+            [ypred alpha(freq, time) Rsq slope(freq, time)] = fastregress(outvar, 20*log10(phsamp));
         end
-    end;    
+    end  
     sigout = slope;
 else 
     g.times = g.plotvals{1};
@@ -457,7 +458,7 @@ function val = gettimes(timevect, timevar);
             trim    = timevar(2);
             len     = length(timevect);
             trimtimevect = timevect(round(trim/100*len)+1:len-round(trim/100*len));
-            fprintf('Subsampling by %d and triming data by %1.1f percent (%d points)\n', nsub, trim, round(trim/100*len));
+            fprintf('Subsampling by %d and trimming data by %1.1f percent (%d points)\n', nsub, trim, round(trim/100*len));
             val = trimtimevect(1:nsub:end);
         end
     else
@@ -508,7 +509,7 @@ function limits = plotfig(times, freqs, vals, g)
         cbar;
     end
 
-% plot figure with symetrical phase
+% plot figure with symmetrical phase
 % ---------------------------------
 function limits = plotfigsim(times, freqs, vals, g)
     icadefs;

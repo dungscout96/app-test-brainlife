@@ -1,4 +1,4 @@
-% std_gettrialsind() - return the index of the trials that comply with the 
+% STD_GETTRIALSIND - return the index of the trials that comply with the 
 %                      defined values from trialinfo
 %
 % Usage:
@@ -84,12 +84,14 @@ try
         for i = 1:2:numel(varsin)
             queryvars.(varsin{i}) = varsin{i+1};
         end
-    else queryvars = []; end
+    else
+        queryvars = [];
+    end
 catch
     disp('std_gettrialsind() error: calling convention {''key'', value, ... } error'); return;
 end
 
-% Checking if fisrt entry is string or struct
+% Checking if first entry is string or struct
 if isstruct(filename)
     if isfield(filename,'trialinfo')
         trialinfo = filename.trialinfo;
@@ -131,7 +133,9 @@ for iVar = 1 :  length(varnames)
     else
         % case of categorical variable
         if ischar(dattrials{1})
-            if ischar(indvarvals) indvarvals = { indvarvals }; end
+            if ischar(indvarvals)
+                indvarvals = {indvarvals};
+            end
             if ~iscell(indvarvals)
                 error(sprintf('Type error - excepting numerical values for field %s', varnames{iVar}));
             end
@@ -156,7 +160,7 @@ for iVar = 1 :  length(varnames)
     end
 end
 
-% Retreiving overlapped values
+% Retrieving overlapped values
 hits = sum(hits,2);
 trialindsx = find(hits == length(varnames));
 if ~isempty(eventvals)

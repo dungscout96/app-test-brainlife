@@ -1,4 +1,4 @@
-% pop_crossf() - Return estimates and plots of event-related spectral coherence 
+% POP_CROSSF - Return estimates and plots of event-related spectral coherence 
 %
 % Usage:
 %       >> pop_crossf(EEG, typeproc, num1, num2, tlimits,cycles,
@@ -14,14 +14,14 @@
 %   cycles   -   >0 -> Number of cycles in each analysis wavelet 
 %                 0 -> Use FFTs (with constant window length)
 %
-% Optional inputs: As for crossf().  See >> help crossf
+% Optional inputs: As for CROSSF.  See >> help crossf
 %    
-% Outputs: Same as crossf(). No outputs are returned when a
+% Outputs: Same as CROSSF. No outputs are returned when a
 %          window pops-up to ask for additional arguments
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 11 March 2002
 %
-% See also: timef(), eeglab() 
+% See also: TIMEF, EEGLAB 
 
 % Copyright (C) 11 March 2002 arno@salk.edu, Arnaud Delorme, CNL / Salk Institute
 %
@@ -109,9 +109,10 @@ if popup
 			 };
 
 	result = inputgui( geometry, uilist, 'pophelp(''pop_crossf'');', ...
-					   fastif(typeproc, 'Plot channel cross-coherence -- pop_crossf()', ...
-							  'Plot component cross-coherence -- pop_crossf()'));
-	if length( result ) == 0 return; end
+					   fastif(typeproc, 'Plot channel cross-coherence -- pop_crossf()', 'Plot component cross-coherence -- pop_crossf()'));
+    if isempty(result)
+        return; 
+    end
 
 	num1     = eval( [ '[' result{1} ']' ] ); 
 	num2     = eval( [ '[' result{2} ']' ] ); 

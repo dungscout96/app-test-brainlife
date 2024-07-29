@@ -1,4 +1,4 @@
-% std_checkset() - check STUDY set consistency
+% STD_CHECKSET - check STUDY set consistency
 %
 % Usage: >> [STUDY, ALLEEG] = std_checkset(STUDY, ALLEEG);
 %
@@ -136,17 +136,19 @@ end
 % --------------------------------------------
 for cc = 1:length(sameica)
     idat = [];
-    for tmpi = 1:length(sameica{cc})
-        if isfield(ALLEEG(sameica{cc}(tmpi)).dipfit, 'model')
-            idat = sameica{cc}(tmpi);
-        end
-    end
-    if ~isempty(idat)
+    if length(sameica{cc}) > 1
         for tmpi = 1:length(sameica{cc})
-            if ~isfield(ALLEEG(sameica{cc}(tmpi)).dipfit, 'model')
-                ALLEEG(sameica{cc}(tmpi)).dipfit = ALLEEG(idat).dipfit;
-                ALLEEG(sameica{cc}(tmpi)).saved  = 'no';
-                fprintf('Warning: no ICA dipoles for dataset %d, using dipoles from dataset %d (same ICA)\n', sameica{cc}(tmpi), idat);
+            if isfield(ALLEEG(sameica{cc}(tmpi)).dipfit, 'model')
+                idat = sameica{cc}(tmpi);
+            end
+        end
+        if ~isempty(idat)
+            for tmpi = 1:length(sameica{cc})
+                if ~isfield(ALLEEG(sameica{cc}(tmpi)).dipfit, 'model')
+                    ALLEEG(sameica{cc}(tmpi)).dipfit = ALLEEG(idat).dipfit;
+                    ALLEEG(sameica{cc}(tmpi)).saved  = 'no';
+                    fprintf('Warning: no ICA dipoles for dataset %d, using dipoles from dataset %d (same ICA)\n', sameica{cc}(tmpi), idat);
+                end
             end
         end
     end
@@ -180,38 +182,11 @@ if length( unique( [ ALLEEG.srate ] )) > 1
     disp('********************************************************************');
 end
 
-% check cluster array
-% -------------------
+% create STUDY design if it is not present
+% ----------------------------------------
 rebuild_design = 0;
 if ~isfield(STUDY, 'cluster'), STUDY.cluster = []; modif = 1; end
 if ~isfield(STUDY, 'changrp'), STUDY.changrp = []; modif = 1; end
-if isempty(STUDY.changrp) && isempty(STUDY.cluster)
-    rebuild_design = 1;
-end
-if isfield(STUDY.cluster, 'sets'),
-    if max(STUDY.cluster(1).sets(:)) > length(STUDY.datasetinfo)
-        disp('Warning: Some datasets had been removed from the STUDY, clusters have been reinitialized');
-        STUDY.cluster = []; modif = 1;
-    end
-	if isempty(STUDY.cluster(1).sets)
-        STUDY.cluster = []; modif = 1;
-    end
-end
-if ~studywasempty
-    if isempty(STUDY.cluster)
-        modif = 1;
-        [STUDY] = std_createclust(STUDY, ALLEEG, 'parentcluster', 'on');
-    end
-    if length(STUDY.cluster(1).child) == length(STUDY.cluster)-1 && length(STUDY.cluster) > 1
-        newchild = { STUDY.cluster(2:end).name };
-        if ~isequal(STUDY.cluster(1).child, newchild)
-            STUDY.cluster(1).child = newchild;
-        end
-    end
-end
-
-% create STUDY design if it is not present
-% ----------------------------------------
 if ~studywasempty
     if isfield(STUDY.datasetinfo, 'trialinfo')
         alltrialinfo = { STUDY.datasetinfo.trialinfo };
@@ -244,30 +219,38 @@ if ~studywasempty
         for indDes = 1:length(STUDY.design)
             for indVar = 1:length(STUDY.design(indDes).variable)
                 if isempty(strmatch( STUDY.design(indDes).variable(indVar).label, setFields)) && ...
-                    ~isempty(trialFields) && ~isempty(STUDY.design(indDes).variable(indVar).label) && ...
+                        ~isempty(trialFields) && ~isempty(STUDY.design(indDes).variable(indVar).label) && ...
                         isempty(strmatch( STUDY.design(indDes).variable(indVar).label, trialFields))
-                        % Missing independent variable
-                        
-                        if isempty(rmInd)
-                            textVal1 = sprintf('The variable ''%s'' defined in the STUDY design is not found in ', STUDY.design(indDes).variable(indVar).label);
-                            textVal2 = 'some of the EEG datasets. Some STUDY features will not be functional.';
-                            if nargin > 2 && strcmpi(options, 'popup')
-                                textVal = [ textVal1 10 textVal2 10 10 'Do you want to remove all designs with missing variables?' ];
-                                res = questdlg2(  textVal, 'Issue with studies', 'No', 'Yes', 'Yes');
-                                if strcmpi(res, 'Yes')
-                                    rmInd = [ rmInd indDes ];
-                                end
-                            else
-                                disp([textVal1 textVal2]);
+
+                    % Missing independent variable
+                    if isempty(rmInd)
+                        textVal1 = sprintf('The variable ''%s'' defined in the STUDY design is not found in ', STUDY.design(indDes).variable(indVar).label);
+                        textVal2 = 'some of the EEG datasets. Some STUDY features will not be functional.';
+                        if nargin > 2 && strcmpi(options, 'popup')
+                            textVal = [ textVal1 10 textVal2 10 10 'Do you want to remove all designs with missing variables?' ];
+                            res = questdlg2(  textVal, 'Issue with studies', 'No', 'Yes', 'Yes');
+                            if strcmpi(res, 'Yes')
+                                rmInd = [ rmInd indDes ];
                             end
                         else
-                            rmInd = [ rmInd indDes ];
+                            disp([textVal1 textVal2]);
                         end
+                    else
+                        rmInd = [ rmInd indDes ];
+                    end
                 end
             end
         end
         if ~isempty(rmInd)
             STUDY.design(rmInd) = [];
+        end
+
+        % check cases
+        for indDes = 1:length(STUDY.design)
+            if ~isempty(setdiff(STUDY.design(indDes).cases.value, STUDY.subject))
+                fprintf('Fixing STUDY design to account for removed subjects\n');
+                STUDY.design(indDes).cases.value = intersect( STUDY.design(indDes).cases.value, STUDY.subject );
+            end
         end
         
         % convert combined independent variable values
@@ -339,19 +322,54 @@ if ~studywasempty
     end
     
     % check that ICA is present and if it is update STUDY.datasetinfo
-    allcompsSTUDY  = { STUDY.datasetinfo.comps };
-    allcompsALLEEG = { ALLEEG.icaweights };
-    if all(cellfun(@isempty, allcompsSTUDY)) && ~all(cellfun(@isempty, allcompsALLEEG))
-        for index = 1:length(STUDY.datasetinfo)
+    recreateclusters = 0;
+    for index = 1:length(STUDY.datasetinfo)
+        if max(STUDY.datasetinfo(index).comps) > size(ALLEEG(index).icaweights,1)
             STUDY.datasetinfo(index).comps = [1:size(ALLEEG(index).icaweights,1)];
+            recreateclusters = 1;
+            modif = 1;
         end
+    end
+    if recreateclusters
+        fprintf('Recreating empty clusters because ICA has changed for some datasets\n');
+        STUDY.cluster = [];
     end
     
     % make channel groups
     % -------------------
-    if ~isfield(STUDY, 'changrp') || isempty(STUDY.changrp)
-        STUDY = std_changroup(STUDY, ALLEEG);
+    STUDYTMP = std_changroup(STUDY, ALLEEG);
+    if length(STUDYTMP.changrp) ~= length(STUDY.changrp)
+        STUDY.changrp = STUDYTMP.changrp;
         modif = 1;
+    end
+    clear STUDYTMP;
+end
+
+% check cluster array
+% -------------------
+if isempty(STUDY.changrp) && isempty(STUDY.cluster)
+    rebuild_design = 1;
+end
+if isfield(STUDY.cluster, 'sets'),
+    if max(STUDY.cluster(1).sets(:)) > length(STUDY.datasetinfo)
+        disp('Warning: Some datasets had been removed from the STUDY, clusters have been reinitialized');
+        STUDY.cluster = []; modif = 1;
+    else
+    	if isempty(STUDY.cluster(1).sets)
+            STUDY.cluster = []; modif = 1;
+        end
+    end
+end
+if ~studywasempty
+    if isempty(STUDY.cluster)
+        modif = 1;
+        [STUDY] = std_createclust(STUDY, ALLEEG, 'parentcluster', 'on');
+    end
+    if length(STUDY.cluster(1).child) == length(STUDY.cluster)-1 && length(STUDY.cluster) > 1
+        newchild = { STUDY.cluster(2:end).name };
+        if ~isequal(STUDY.cluster(1).child, newchild)
+            STUDY.cluster(1).child = newchild;
+        end
     end
 end
 

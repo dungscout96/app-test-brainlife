@@ -1,4 +1,4 @@
-% pop_readsegegi() - load a segmented EGI EEG file. Pop up query 
+% POP_READSEGEGI - load a segmented EGI EEG file. Pop up query 
 %                    window if no arguments.
 % Usage:
 %   >> EEG = pop_readsegegi;             % a window pops up
@@ -12,7 +12,7 @@
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 10 April 2003
 %
-% See also: eeglab(), readegi(), readegihdr()
+% See also: EEGLAB, READEGI, READEGIHDR
 
 % Copyright (C) 12 Nov 2002 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -48,8 +48,11 @@ command = '';
 if nargin < 1 
 	% ask user
 	[filename, filepath] = uigetfile('*.RAW;*.raw', 'Choose first EGI RAW file -- pop_readsegegi()'); 
+    
     drawnow;
-	if filename == 0 return; end
+    if filename == 0
+        return;
+    end
 	filename = fullfile(filepath, filename);
 end
 

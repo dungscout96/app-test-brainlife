@@ -1,4 +1,4 @@
-% readeetraklocs() - read 3-D location files saved using the EETrak
+% READEETRAKLOCS - read 3-D location files saved using the EETrak
 %                    digitizing software.
 % Usage:
 %   >> CHANLOCS = readeetraklocs( filename );
@@ -8,11 +8,11 @@
 %
 % Outputs:
 %   CHANLOCS       - EEGLAB channel location data structure. 
-%                    See help readlocs()
+%                    See help READLOCS
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, Nov 2003
 %
-% See also: readlocs()
+% See also: READLOCS
 
 % Copyright (C) 2003 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -78,10 +78,15 @@ function chanlocs = readeetraklocs( filename )
         positions = locs(indpos+1:indlabels-1,1:3);
     end
     labels    = locs(indlabels+1:end,:);
+
+    if size(labels,2) == size(positions,1)
+        % transpose if labels are on one row
+        labels = labels';
+    end
         
     % create structure
     % ----------------
-    for index = 1:length(labels)
+    for index = 1:size(positions,1)
         chanlocs(index).labels = labels{index};
         chanlocs(index).X      = positions{index,1};
         chanlocs(index).Y      = positions{index,2};

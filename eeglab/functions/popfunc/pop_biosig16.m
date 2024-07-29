@@ -1,4 +1,4 @@
-% pop_biosig() - import data files into EEGLAB using BIOSIG toolbox
+% POP_BIOSIG - import data files into EEGLAB using BIOSIG toolbox
 %
 % Usage:
 %   >> OUTEEG = pop_biosig; % pop up window
@@ -69,7 +69,9 @@ if nargin < 1
 	[filename, filepath] = uigetfile('*.*', 'Choose an BDF file -- pop_biosig()'); %%% this is incorrect in original version!!!!!!!!!!!!!!
     drawnow;
     
-	if filename == 0 return; end
+	if filename == 0 
+        return; 
+    end
 	filename = [filepath filename];
     
     % open file to get infos
@@ -83,7 +85,7 @@ if nargin < 1
         disp('We highly recommend that you choose a reference channel IF these are Biosemi data');
         disp('(e.g., a mastoid or other channel). Otherwise the data will lose 40 dB of SNR!');
     end
-    uilist = { { 'style' 'text' 'String' 'Channel list (defaut all):' } ...
+    uilist = { { 'style' 'text' 'String' 'Channel list (default all):' } ...
                  { 'style' 'edit' 'string' '' } ...
                  { 'style' 'text' 'String' [ 'Data range (in seconds) to read (default all [0 ' int2str(dat.NRec) '])' ] } ...
                  { 'style' 'edit' 'string' '' } ...
@@ -96,7 +98,9 @@ if nargin < 1
     geom = { [3 1] [3 1] [3 0.35 0.5] [3 0.35 0.5] [3 1] };
     result = inputgui( geom, uilist, 'pophelp(''pop_biosig'')', ...
                                  'Load data using BIOSIG -- pop_biosig()');
-    if length(result) == 0 return; end
+    if isempty(result) 
+        return; 
+    end
     
     % decode GUI params
     % -----------------
@@ -111,7 +115,7 @@ else
     options = varargin;
 end
 
-% decode imput parameters
+% decode input parameters
 % -----------------------
 g = finputcheck( options, { 'blockrange'  'integer' [0 Inf]    [];
                             'channels'    'integer' [0 Inf]    [];
@@ -248,7 +252,7 @@ EEG = eeg_checkset(EEG, 'eventconsistency');
 % $$$     end
 % $$$     EEG = eeg_checkset(EEG, 'eventconsistency');
 % $$$ else 
-% $$$     disp('Warning: no event found. Events might be embeded in a data channel.');
+% $$$     disp('Warning: no event found. Events might be embedded in a data channel.');
 % $$$     disp('         To extract events, use menu File > Import Event Info > From data channel');
 % $$$ end
 
@@ -258,7 +262,7 @@ if ~isempty(g.ref)
     disp('Re-referencing...');
     EEG.data = EEG.data - repmat(mean(EEG.data(g.ref,:),1), [size(EEG.data,1) 1]);
     if length(g.ref) == size(EEG.data,1)
-        EEG.ref  = 'averef';
+        EEG.ref  = 'average';
     end
     if length(g.ref) == 1
         disp([ 'Warning: channel ' int2str(g.ref) ' is now zeroed (but still present in the data)' ]);

@@ -1,4 +1,4 @@
-% pop_statparams() - helper function for pop_erspparams, pop_erpparams, and
+% POP_STATPARAMS - helper function for pop_erspparams, pop_erpparams, and
 %                    pop_specparams.
 %
 % Usage:
@@ -45,7 +45,7 @@
 %                  data {default: NaN}
 %  'mcorrect'    - ['fdr'|'holms'|'bonferoni'|'none'] correction for multiple
 %                  comparisons. 'fdr' uses false discovery rate. See the fdr 
-%                  function for more information. Defaut is
+%                  function for more information. Default is
 %                  none'.
 %
 % Fieldtrip statistics:
@@ -102,8 +102,10 @@ function [STUDY, com] = pop_statparams(STUDY, varargin);
 
 com = '';
 if isfield(STUDY, 'etc')
-    if ~isfield(STUDY.etc, 'statistics') STUDY.etc.statistics = default_stats([]);
-    else                                 STUDY.etc.statistics = default_stats(STUDY.etc.statistics);
+    if ~isfield(STUDY.etc, 'statistics') 
+        STUDY.etc.statistics = default_stats([]);
+    else                                 
+        STUDY.etc.statistics = default_stats(STUDY.etc.statistics);
     end
     if length(varargin) == 1 && strcmpi(varargin{1}, 'default')
         return;
@@ -256,7 +258,7 @@ if isempty(varargin) && ~isempty(STUDY)
                                             'title', 'Set statistical parameters -- pop_statparams()','eval', evalstr);
     if isempty(res), return; end
     
-    % decode paramters
+    % decode parameters
     % ----------------
     if res.marginal,    res.effect       = 'marginal'; else res.effect = 'main';  end
     if res.groupstats,   res.groupstats   = 'on';  else res.groupstats = 'off';  end
@@ -344,8 +346,9 @@ else
     end
     
     if isfield(STUDY, 'etc')
-         STUDY.etc.statistics = paramstruct; 
-    else STUDY = paramstruct;
+        STUDY.etc.statistics = paramstruct; 
+    else 
+        STUDY = paramstruct;
     end
 end
 

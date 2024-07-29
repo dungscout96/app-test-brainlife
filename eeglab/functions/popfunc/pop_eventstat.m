@@ -1,8 +1,8 @@
-% pop_eventstat() - Computes and plots statistical characteristics of an EEG event,
+% POP_EVENTSTAT - Computes and plots statistical characteristics of an EEG event,
 %                   including the data histogram, a fitted normal distribution,
-%                   a normal ditribution fitted on trimmed data, a boxplot, and
+%                   a normal distribution fitted on trimmed data, a boxplot, and
 %                   the QQ-plot. The estimates value are printed in a panel and
-%                   can be read as output. NaNs are omitted. See signalstat().
+%                   can be read as output. NaNs are omitted. See SIGNALSTAT.
 %
 % Usage:
 %   >>  OUTEEG = pop_eventstat( EEG ); % pops up
@@ -16,14 +16,14 @@
 %                a cell array. Default is all types.
 %   latrange   - [min max] event latency range within data epochs in milliseconds.
 %                Default is whole epoch.
-%   percent    - percentage for trimmed data statistics. Default is 5%. (see signalstat())
+%   percent    - percentage for trimmed data statistics. Default is 5%. (see SIGNALSTAT)
 %    
 % Outputs:
 %   OUTEEG  - output dataset
 %
 % Author: Arnaud Delorme & Luca Finelli, CNL / Salk Institute - SCCN, 15 August 2002
 %
-% See also: signalstat(), eeg_getepochevent(), eeglab()
+% See also: SIGNALSTAT, EEG_GETEPOCHEVENT, EEGLAB
 
 % Copyright (C) 2002 Arnaud Delorme & Luca Finelli, Salk/SCCN, La Jolla, CA
 %
@@ -86,12 +86,15 @@ if nargin < 2
 					'Percent for trimmed statistics:' };
 	inistr       = { 'latency' '' '' '5' };
 	result       = inputdlg2( promptstr, 'Plot event statistics -- pop_eventstat()', 1,  inistr, 'signalstat');
-	if length( result ) == 0 return; end
+	if length( result ) == 0 
+        return; 
+    end
 	eventfield   = deblank(result{1}); % the brackets allow to process matlab arrays
     if ~isempty(result{2})
         if strcmpi(result{2}(1),'''')
-             type = eval( [ '{' result{2} '}' ] );
-        else type = parsetxt( result{2});
+            type = eval( [ '{' result{2} '}' ] );
+        else 
+            type = parsetxt( result{2});
         end
     else
         disp('WARNING: you should select an event type');
@@ -111,7 +114,7 @@ else
     end
 end
 
-% call function signalstat() either on raw data or ICA data
+% call function SIGNALSTAT either on raw data or ICA data
 % ---------------------------------------------------------
 [ typevals alltypevals ] = eeg_getepochevent(EEG, type, latrange, eventfield);
 % concatenate alltypevals

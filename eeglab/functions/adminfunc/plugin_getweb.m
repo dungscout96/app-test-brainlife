@@ -43,17 +43,18 @@ if datenum(dateTmp) < 736583
               'Download plugins from the internet and unzip them in the plugin folder instead.' ] );
 end
 
-% retreiving statistics
+% retrieving statistics
 eeglab_options;
 try
-    disp( [ 'Retreiving download statistics...' ] );
+    disp( 'Retrieving download statistics...' );
     if exist('OCTAVE_VERSION', 'builtin') == 0
         [plugin, status] = plugin_urlread([ 'http://sccn.ucsd.edu/eeglab/plugin_uploader/plugin_getcountall_nowiki_json.php?type=' type '&upload=' num2str(option_showpendingplugins)]);
     else
         [plugin, status] = urlread([ 'http://sccn.ucsd.edu/eeglab/plugin_uploader/plugin_getcountall_nowiki_json.php?type=' type '&upload=' num2str(option_showpendingplugins)]);
     end
-    if isempty(plugin)
+    if isempty(plugin) || isequal(plugin, 'Couldn''t make connection to DB.')
         disp('Issue with retrieving statistics for extensions');
+        plugin = [];
         return;
     end
     try
@@ -78,7 +79,7 @@ renameField = { 'plugin' 'name';
                 'link'   'zip' };
 
 if ~isempty(pluginOri)
-    currentNames = lower({ pluginOri.name });
+    currentNames = lower({ pluginOri.name }); % this is old code that is not reached
 else
     currentNames = {};
 end
@@ -86,6 +87,10 @@ for iRow = 1:length(plugin)
     
     % rename fields
     for iField = 1:size(renameField, 1)
+        if ~isfield(plugin, renameField{iField, 1})
+            disp('Plugin list incomplete - maybe an issue with internet connection - aborting.');
+            return
+        end
         plugin(iRow).(renameField{iField, 2}) = plugin(iRow).(renameField{iField, 1});
     end
     
@@ -99,6 +104,7 @@ for iRow = 1:length(plugin)
     plugin(iRow).numrating =  str2double(plugin(iRow).numrating);
     plugin(iRow).rating    =  str2double(plugin(iRow).rating);
     plugin(iRow).critical  =  str2double(plugin(iRow).critical);
+    plugin(iRow).removed   =  str2double(plugin(iRow).removed);
     plugin(iRow).downloads =  str2double(plugin(iRow).downloads);
     plugin(iRow).size      =  sscanf(plugin(iRow).size, '%f'); % Only numeric part is taken, possible KB or MB additions are ignored
     plugin(iRow).webrating = [ 'https://sccn.ucsd.edu/eeglab/plugin_uploader/simplestar.php?plugin=' plugin(iRow).name '&version=' plugin(iRow).version ];

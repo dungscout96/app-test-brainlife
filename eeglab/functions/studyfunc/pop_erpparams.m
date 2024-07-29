@@ -1,4 +1,4 @@
-% pop_erpparams() - Set plotting and statistics parameters for cluster ERP 
+% POP_ERPPARAMS - Set plotting and statistics parameters for cluster ERP 
 %                   plotting
 % Usage:    
 %   >> STUDY = pop_erpparams(STUDY, 'key', 'val');   
@@ -26,7 +26,7 @@
 %   'averagechan' - ['rms'|'on'|'off'] average data channels when several are
 %                  selected ('on') or compute root mean square ('rms').
 %
-% See also: std_erpplot()
+% See also: STD_ERPPLOT
 %
 % Authors: Arnaud Delorme, CERCO, CNRS, 2006-
 
@@ -158,15 +158,21 @@ if isempty(varargin)
     if ~isequal(res.ylim       , STUDY.etc.erpparams.ylim),      options = { options{:} 'ylim' res.ylim       }; end
     if ~isequal(res.timerange  , STUDY.etc.erpparams.timerange) &&  res.multiplechan ~= 2, options = { options{:} 'timerange' res.timerange }; end
     
-    % mutliple channel option
+    % multiple channel option
     % -----------------------
     if res.multiplechan == 1
         if ~isequal('off', STUDY.etc.erpparams.averagechan), options = { options{:} 'averagechan' 'off' }; end
         if ~isempty(       STUDY.etc.erpparams.topotime),    options = { options{:} 'topotime' [] }; end
     elseif res.multiplechan == 2
-        if ~isequal('off', STUDY.etc.erpparams.averagechan), options = { options{:} 'averagechan' 'off' }; end
-        if ~isequal(res.timerange, STUDY.etc.erpparams.topotime) options = { options{:} 'topotime' res.timerange }; end
-        if ~isequal([], STUDY.etc.erpparams.timerange) options = { options{:} 'timerange' [] }; end
+        if ~isequal('off', STUDY.etc.erpparams.averagechan)
+            options = {options{:}, 'averagechan', 'off'};
+        end
+        if ~isequal(res.timerange, STUDY.etc.erpparams.topotime)
+            options = {options{:}, 'topotime', res.timerange};
+        end
+        if ~isequal([], STUDY.etc.erpparams.timerange)
+            options = { options{:} 'timerange' [] };
+        end
         if isempty(res.timerange)
             disp('Warning: you must select a time range to plot scalp topographies, plotting individual channels instead');
         end

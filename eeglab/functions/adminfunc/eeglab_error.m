@@ -1,4 +1,4 @@
-% eeglab_error() - generate an eeglab error.
+% EEGLAB_ERROR - generate an eeglab error.
 %
 % Usage: >>  eeglab_error;
 %
@@ -6,7 +6,7 @@
 %
 % Author: Arnaud Delorme, SCCN, INC, UCSD, 2006-
 %
-% see also: eeglab()
+% see also: EEGLAB
 
 % Copyright (C) 2006 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -35,9 +35,8 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 % THE POSSIBILITY OF SUCH DAMAGE.
 
-function eeglab_error
-
-    % handling errors
+function eeglab_error()
+% handling errors
     % ----------------
     tmplasterr = lasterr;
     [iseeglaberror tmplasterr header] = testeeglaberror(tmplasterr);
@@ -68,7 +67,7 @@ function eeglab_error
         else
             tmperr = [ tmperr 10 10 'This is a problem with FIELDTRIP. The Fieldtrip version you downloaded' 10 ...
                                     'is corrupted. Please manually replace Fieldtrip with an earlier version' 10 ...
-                                    'and/or email the Fieldtrip developpers so they can fix the issue.' ];
+                                    'and/or email the Fieldtrip developers so they can fix the issue.' ];
         end
         errordlg2(tmperr, header);
     end

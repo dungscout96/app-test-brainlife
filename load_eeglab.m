@@ -1,4 +1,4 @@
 function load_eeglab()
-addpath('/home/octave/eeglab');
+addpath('eeglab');
 eeglab nogui;
 end

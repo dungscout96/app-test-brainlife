@@ -1,4 +1,4 @@
-% std_plotcurve() - plot ERP or spectral traces for a STUDY component 
+% STD_PLOTCURVE - plot ERP or spectral traces for a STUDY component 
 %                   or channel cluster 
 % Usage:
 %          >> std_plotcurve( axvals, data, 'key', 'val', ...)
@@ -57,7 +57,7 @@
 %                  above). 'nocurve' does not plot the mean. This functionality
 %                  does not work for all data configuration {default: 'off'}
 %  'figure'      - ['on'|'off'] creates a new figure ('on'). The 'off' mode
-%                  plots all of the groups and conditions on the same pannel.
+%                  plots all of the groups and conditions on the same panel.
 % 'plotsubjects' - ['on'|'off'] overplot traces for individual components
 %                  or channels {default: 'off'}
 % 'singlesubject' - ['on'|'off'] set to 'on' to plot single subject.
@@ -70,7 +70,7 @@
 %
 % Author: Arnaud Delorme, CERCO, CNRS, 2006-
 %
-% See also: pop_erspparams(), pop_erpparams(), pop_specparams(), statcond()
+% See also: POP_ERSPPARAMS, POP_ERPPARAMS, POP_SPECPARAMS, STATCOND
 
 % Copyright (C) 2006 Arnaud Delorme
 %
@@ -114,8 +114,8 @@ opt = finputcheck( varargin, { 'ylim'          'real'   []              [];
                                'unitx'         'string' { 'ms','hz','rmsms','rmshz','hzpsd','rmshzpsd' }   'ms';
                                'chanlocs'      'struct' []              struct('labels', {});
                                'plotsubjects'  'string' { 'on','off' }  'off';
-                               'condnames'     'cell'   []              {}; % just for legends
-                               'groupnames'    'cell'   []              {}; % just for legends
+                               'condnames'   'cell'   []   {};
+                               'groupnames'  'cell'   []   {};
                                'figtag'        'string' []              'tmp_curvetag';
                                'groupstats'    'cell'   []              {};
                                'condstats'     'cell'   []              {};
@@ -130,8 +130,8 @@ opt = finputcheck( varargin, { 'ylim'          'real'   []              [];
                                'legend'        { 'string','cell' } { { 'on','off' } {} }  'off';
                                'datatype'      'string' { 'ersp','itc','erp','spec' }    'erp';
                                'plotgroups'    'string' { 'together','apart' }  'apart';
-                               'plotmode'      'string' { 'test','condensed' }  'test'; % deprecated
-                               'plotconditions'    'string' { 'together','apart' }  'apart' }, 'std_plotcurve');
+                               'plotmode', 'string', {'test', 'condensed'}, 'test';
+                               'plotconditions', 'string', {'together', 'apart'}, 'apart'}, 'std_plotcurve');
 
 % opt.figure =  'off'; % test by nima
 if ischar(opt), error(opt); end
@@ -142,7 +142,7 @@ ng = size(data,2);
 if length(opt.chanlocs) > 1, opt.plottopo = 'on'; end
 if strcmpi(opt.plottopo, 'on') && size(data{1},3) == 1, opt.singlesubject = 'on'; end
 %if size(data{1},2) == 1,                              opt.singlesubject = 'on'; end
-if all(all(cellfun('size', data, 2)==1))               opt.singlesubject = 'on'; end
+if all(all(cellfun('size', data, 2)==1)),              opt.singlesubject = 'on'; end
 if any(any(cellfun('size', data, 2)==1)), opt.groupstats = {}; opt.condstats = {}; end
 if strcmpi(opt.datatype, 'spec'), opt.unit = 'Hz'; end
 if strcmpi(opt.plotsubjects, 'on')
@@ -157,7 +157,7 @@ if strcmpi(opt.plotconditions, 'together') &&  ~isempty(opt.groupstats), opt.plo
 if strcmpi(opt.plotgroups,     'together') &&  ~isempty(opt.condstats) , opt.plotgroups     = 'apart'; end
 if ischar(opt.legend), opt.legend = {}; end
 if isempty(opt.titles), opt.titles = cell(10,10); opt.titles(:) = { '' }; end
-if length(data(:)) == length(opt.legend(:)), 
+if length(data(:)) == length(opt.legend(:))
     opt.legend = reshape(opt.legend, size(data))'; 
     opt.legend(cellfun(@isempty, data)) = []; 
     opt.legend = (opt.legend)';
@@ -218,8 +218,8 @@ end
 % remove empty entries
 % --------------------
 datapresent = ~cellfun(@isempty, data);
-if size(data,1) > 1, for c = size(data,1):-1:1, if sum(datapresent(c,:)) == 0, data(c,:) = []; coldata(c,:) = []; if ~strcmpi(opt.plotconditions, 'together') opt.titles(c,:) = []; end; if ~isempty(opt.groupstats), opt.groupstats(c) = []; end; end; end; end
-if size(data,2) > 1, for g = size(data,2):-1:1, if sum(datapresent(:,g)) == 0, data(:,g) = []; coldata(:,g) = []; if ~strcmpi(opt.plotgroups    , 'together') opt.titles(:,g) = []; end; if ~isempty(opt.condstats ), opt.condstats( g) = []; end; end; end; end
+if size(data,1) > 1, for c = size(data,1):-1:1, if sum(datapresent(c,:)) == 0, data(c,:) = []; coldata(c,:) = []; if ~strcmpi(opt.plotconditions, 'together'), opt.titles(c,:) = []; end; if ~isempty(opt.groupstats), opt.groupstats(c) = []; end; end; end; end
+if size(data,2) > 1, for g = size(data,2):-1:1, if sum(datapresent(:,g)) == 0, data(:,g) = []; coldata(:,g) = []; if ~strcmpi(opt.plotgroups    , 'together'), opt.titles(:,g) = []; end; if ~isempty(opt.condstats ), opt.condstats( g) = []; end; end; end; end
 if strcmpi(opt.plotsubjects, 'off'), tmpcol = coldata'; tmpcol = tmpcol(:)'; end
 nc = size(data,1);
 ng = size(data,2);
@@ -240,7 +240,7 @@ if isempty(opt.groupnames)
     if ng == 1, opt.groupnames = { '' }; end
 end
 
-% plotting paramters
+% plotting parameters
 % ------------------
 if ng > 1 && ~isempty(opt.groupstats), addc = 1; else addc = 0; end
 if nc > 1 && ~isempty(opt.condstats ), addr = 1; else addr = 0; end
@@ -282,13 +282,13 @@ if strcmpi(opt.effect, 'marginal') || ng == 1 || nc == 1
     end
 elseif strcmpi(opt.effect, 'main') && ~isempty(opt.interstats)
     if ~isnan(opt.threshold) && ( ~isempty(opt.groupstats) || ~isempty(opt.condstats) )    
-        pcondplot  = { opt.interstats{1} };
-        pgroupplot = { opt.interstats{2} };
+        pcondplot  = { opt.interstats{2} };
+        pgroupplot = { opt.interstats{1} };
         pinterplot = opt.interstats{3};
         maxplot = 1;
     else
-        if ~isempty(opt.interstats{1}), pcondplot  = { -log10(opt.interstats{1}) }; end
-        if ~isempty(opt.interstats{2}), pgroupplot = { -log10(opt.interstats{2}) }; end
+        if ~isempty(opt.interstats{2}), pcondplot  = { -log10(opt.interstats{2}) }; end
+        if ~isempty(opt.interstats{1}), pgroupplot = { -log10(opt.interstats{1}) }; end
         if ~isempty(opt.interstats{3}), pinterplot = -log10(opt.interstats{3}); end
         maxplot = 3;
     end
@@ -318,11 +318,11 @@ if strcmpi(opt.figure, 'on')
     figure('color', 'w','Tag', opt.figtag);
     pos = get(gcf, 'position');
     basewinsize = 200/max(nc,ng)*3;
-    if strcmpi(opt.plotgroups, 'together') pos(3) = 200*(1+addc);
-    else                                   pos(3) = 200*(ng+addc);
+    if strcmpi(opt.plotgroups, 'together'), pos(3) = 200*(1+addc);
+    else                                    pos(3) = 200*(ng+addc);
     end
-    if strcmpi(opt.plotconditions , 'together') pos(4) = 200*(1+addr);
-    else                                        pos(4) = 200*(nc+addr);
+    if strcmpi(opt.plotconditions , 'together'), pos(4) = 200*(1+addr);
+    else                                         pos(4) = 200*(nc+addr);
     end
     if all(pos(3:4) == 200), pos(3:4) = 400; end % double figure size if 1x1
     if strcmpi(opt.subplot, 'transpose'), set(gcf, 'position', [ pos(1) pos(2) pos(4) pos(3)]);
@@ -430,7 +430,7 @@ for c = 1:ncplot
             % tmpdata is of size "points x channels x subject x conditions"
             % or                 "points x   1   x components x conditions"
             % -------------------------------------------------------------
-            if ~dimreduced_sizediffers && strcmpi(opt.plotsubjects, 'off') % average accross subjects
+            if ~dimreduced_sizediffers && strcmpi(opt.plotsubjects, 'off') % average across subjects
                 tmpstd = squeeze(real(std(tmpdata,[],3)))/sqrt(size(tmpdata,3)); tmpstd = squeeze(permute(tmpstd, [2 1 3])); tmpdata = squeeze(real(nan_mean(tmpdata,3)));
             end
             tmpdata = squeeze(permute(tmpdata, [2 1 3 4]));
@@ -491,7 +491,7 @@ for c = 1:ncplot
             end
         end
 
-        % statistics accross groups
+        % statistics across groups
         % -------------------------
         if g == ngplot && ng > 1 && ~isempty(opt.groupstats)            
             if ~strcmpi(opt.plotgroups, 'together') || ~isempty(opt.condstats) || isnan(opt.threshold)
@@ -521,7 +521,7 @@ for c = 1:ncplot
     end
 end
 
-% statistics accross conditions
+% statistics across conditions
 % -----------------------------
 if ~isempty(opt.condstats) && nc > 1 && (~strcmpi(opt.plotconditions, 'together') || ~isempty(opt.groupstats) || isnan(opt.threshold))
     for g = 1:ng
@@ -550,7 +550,7 @@ if ~isempty(opt.condstats) && nc > 1 && (~strcmpi(opt.plotconditions, 'together'
 end
     
     
-% statistics accross group and conditions
+% statistics across group and conditions
 % ---------------------------------------
 if ~isempty(opt.groupstats) && ~isempty(opt.condstats) && ng > 1 && nc > 1 
     mysubplot(ncplot+addr, ngplot+addc, ncplot+addr, ngplot + 1, opt.subplot);
@@ -612,7 +612,7 @@ function hdl = mysubplot(nr,nc,r,c,subplottype)
 
 % rapid filtering for ERP
 % -----------------------
-function tmpdata2 = myfilt(tmpdata, srate, lowpass, highpass); 
+function tmpdata2 = myfilt(tmpdata, srate, lowpass, highpass)
     bscorrect = 1;
     if bscorrect
         % Getting initial baseline

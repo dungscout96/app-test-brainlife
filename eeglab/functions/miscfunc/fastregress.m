@@ -1,12 +1,14 @@
 % fastregress - perform fast regression and return p-value
 %
 % Usage:
-% [ypred, alpha, rsq, slope, intercept] = fastregress(x, y, plotflag);
+% [ypred, alpha, rsq, slope, intercept] = fastregress(x, y);
+% [ypred, alpha, rsq, slope, intercept] = fastregress(x, y, plotflag, plotleg);
 %
 % Inputs
 %  y - y values
 %  x - x values
-%  plotflag - [0|1] plot regression
+%  plotflag - [0|1] plot regression and legend. Default 0.
+%  plotleg  - [0|1] plot legend. Default same as plotflag.
 %
 % Outputs
 %  ypred - y prediction
@@ -44,12 +46,28 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 % THE POSSIBILITY OF SUCH DAMAGE.
 
-function [ypred, alpha, rsq, B, intercept, h] = fastregress(x, y, ploting);
+function [ypred, alpha, rsq, B, intercept, h] = fastregress(x, y, plotflag, plotleg)
     
     if nargin < 1
         help fastregress; return;
     end
+    if nargin < 3
+        plotflag = false;
+    end
+    if nargin < 4
+        plotleg = plotflag;
+    end
     
+    % take care of NaNs in x and y
+    if any(isnan(x))
+        y(isnan(x)) = [];
+        x(isnan(x)) = [];
+    end
+    if any(isnan(y))
+        x(isnan(y)) = [];
+        y(isnan(y)) = [];
+    end
+
     % this part is useless but still works
     %B=polyfit(x, y, 1);         % B is the slope
     %ypred = polyval(B,x);       % predictions
@@ -72,10 +90,12 @@ function [ypred, alpha, rsq, B, intercept, h] = fastregress(x, y, ploting);
     intercept = B(1);
     B = B(2);
 
-    if nargin > 2
+    if plotflag
         hold on;
-        [ynew tmp] = sort(ypred);
-        xnew       = x(tmp);
+        [ynew, tmp] = sort(ypred);
+        xnew        = x(tmp);
         h = plot(xnew, ynew, 'r');
+    end
+    if plotleg
         legend(sprintf('R^2=%f', rsq), sprintf('p  =%f', alpha));
     end

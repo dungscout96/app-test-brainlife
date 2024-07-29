@@ -1,4 +1,4 @@
-% pop_savestudy() - save a STUDY structure to a disk file
+% POP_SAVESTUDY - save a STUDY structure to a disk file
 %
 % Usage:
 %   >> STUDY = pop_savestudy( STUDY, EEG ); % pop up and interactive window 
@@ -16,7 +16,7 @@
 %   'resavedatasets' - ['on'|'off'] resave STUDY datasets if necessary.
 %                Default is 'off'.
 %
-% Note: the parameter EEG is currenlty not being used. In the future, this function
+% Note: the parameter EEG is currently not being used. In the future, this function
 %       will check if any of the datasets of the study have been modified and
 %       have to be resaved.
 %
@@ -115,6 +115,10 @@ if ischar(g), error(g); end
 if isempty(STUDY.filename) && isempty(g.filename)
     error('File name required to save the study');
 end
+if isempty(g.filepath) 
+    [g.filepath, g.filename, ext] = fileparts(g.filename);
+    g.filename = [ g.filename ext ];
+end
 
 % resave datasets
 % ---------------
@@ -168,8 +172,14 @@ STUDYfile = fullfile(STUDY.filepath,STUDY.filename);
 STUDYTMP = STUDY;
 STUDY = std_rmalldatafields(STUDY);
 eeglab_options;
-if option_saveversion6, save('-v6' , STUDYfile, 'STUDY');
-else                    save('-v7.3' , STUDYfile, 'STUDY');
+if option_saveversion6
+    try 
+        save('-v6' , STUDYfile, 'STUDY'); % will crash for chinese characters
+    catch
+        save('-v7.3' , STUDYfile, 'STUDY');
+    end
+else
+    save('-v7.3' , STUDYfile, 'STUDY');
 end
 STUDY = STUDYTMP;
 

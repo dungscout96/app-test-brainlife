@@ -1,4 +1,4 @@
-% pop_editeventfield() - Add/remove/rename/modify a field in the event structure 
+% POP_EDITEVENTFIELD - Add/remove/rename/modify a field in the event structure 
 %              of an EEG dataset. Can also be used to append new events to the end of the 
 %              event structure or to delete all current events. If the dataset is 
 %              the only input, a window pops up to ask for relevant parameter values.
@@ -75,7 +75,7 @@
 %
 % Author: Arnaud Delorme & Scott Makeig, CNL / Salk Institute, 9 Feb 2002-
 %
-% See also: pop_importevent(), eeg_eventformat(), pop_selectevent()
+% See also: POP_IMPORTEVENT, EEG_EVENTFORMAT, POP_SELECTEVENT
 
 % Copyright (C) Arnaud Delorme, CNL / Salk Institute, 9 Feb 2002, arno@salk.edu
 %
@@ -107,7 +107,7 @@
 %02/13/2001 fix bug if EEG.event is empty -ad
 %03/12/2001 add timeunit option -ad
 %03/18/2001 debug rename option -ad & sm
-%03/18/2001 correct allignment problem -ad & ja
+%03/18/2001 correct alignment problem -ad & ja
 
 function [EEG, com] = pop_editeventfield(EEG, varargin);
 
@@ -247,13 +247,16 @@ else % no interactive inputs
     % scan args to modify array/file format
     % array are transformed into string 
     % files are transformed into string of string
-    % (this is usefull to build the string command for the function)
+    % (this is useful to build the string command for the function)
     % --------------------------------------------------------------
     for index=1:2:length(args)
-        if iscell(args{index+1}), args{index+1} = { args{index+1} }; end; % double nested 
-        if ischar(args{index+1})   args{index+1} = args{index+1}; % string 
+        if iscell(args{index+1})
+            args{index+1} = {args{index+1}};
         end
-    end;                
+        if ischar(args{index+1})
+            args{index+1} = args{index+1};
+        end
+    end                
 end
 
 % create structure
@@ -337,16 +340,18 @@ for curfield = tmpfields'
                               EEG = eeg_checkset(EEG, 'makeur');
 		                 case 'no' % match existing fields
 		                           % ---------------------
-		                      tmparray = load_file_or_array( getfield(g, curfield{1}), g.skipline, g.delim );
-		                      if isempty(g.indices) g.indices = [1:size(tmparray(:),1)] + length(EEG.event); end
-		                      
+                              tmparray = load_file_or_array(getfield(g, curfield{1}), g.skipline, g.delim);
+                              if isempty(g.indices)
+                                  g.indices = 1:size(tmparray(:), 1) + length(EEG.event);
+                              end
+
 		                      indexmatch = strmatch(curfield{1}, allfields);
 		                      if isempty(indexmatch) % no match
 		                          disp(['pop_editeventfield(): creating new field ''' curfield{1} '''' ]);
 		                      end
                               try
                                   EEG.event = setstruct(EEG.event, curfield{1}, g.indices, tmparray);
-                              catch,
+                              catch
                                   error('Wrong size for input array');
                               end
   							  if strcmp(curfield{1}, 'latency')
@@ -378,7 +383,7 @@ for curfield = tmpfields'
       end
 end
 
-if isempty(EEG.event) % usefull 0xNB empty structure
+if isempty(EEG.event) % useful 0xNB empty structure
     EEG.event = [];
 end
 EEG = eeg_checkset(EEG, 'eventconsistency');

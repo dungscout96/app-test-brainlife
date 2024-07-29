@@ -1,13 +1,13 @@
-% mri3dplot() - plot 3-D density image translucently on top of the mean MR 
-%               brain image used in dipplot(). Plot brain slices in directions
+% MRI3DPLOT - plot 3-D density image translucently on top of the mean MR 
+%               brain image used in DIPPLOT. Plot brain slices in directions
 %               'top' (axial), or 'side' (sagittal), or 'rear' (coronal).
-%               Creates a new figure(). Smoothing uses Matlab smooth3()
+%               Creates a new FIGURE. Smoothing uses Matlab SMOOTH3
 % Usage:
 %      >> [smoothed_3ddens, mriplanes] = mri3dplot(array3d, mri, 'key', 'val', ...);
 %
 % Input: 
 %   array3d     - 3-D array to plot translucently on top of MRI image planes
-%                  (e.g., as returned by dipoledensity(), unit: dipoles/cc).
+%                  (e.g., as returned by DIPOLEDENSITY, unit: dipoles/cc).
 %   mri         - [string or struct] base MR image structure (as returned by 
 %                 dipoledensity.m or mri file (matlab format or file format read 
 %                 by fcdc_read_mri. See dipplot.m help for more information.
@@ -36,8 +36,8 @@
 %                 Default is 'on'.
 %   'mixfact'   - [float] factor for mixing the background image with the
 %                 array3d information. Default is 0.5.
-%   'mixmode'   - ['add'|'overwrite'] 'add' will allow for trasnparency
-%                 while 'overwrite' will preserve the orginal MRI image 
+%   'mixmode'   - ['add'|'overwrite'] 'add' will allow for transparency
+%                 while 'overwrite' will preserve the original MRI image 
 %                 and overwrite the pixel showind density changes.
 %
 % Outputs:
@@ -52,7 +52,7 @@
 %   array = gauss3d(91,109,91);
 %   mri3dplot(array, mri);
 %
-% See also: plotmri()
+% See also: PLOTMRI
 
 % Copyright (C) Arnaud Delorme, sccn, INC, UCSD, 2003-
 % 03/29/2013 Makoto. Line 370 added to avoid negative matrix indices.
@@ -94,13 +94,13 @@ function [newprob3dori, mriplanes] = mri3dplot(prob3d, mri, varargin)
     DEFAULT_SPACING = 11;     % default MR slice interval (in mm)
     translucency    = 0.5;    % default alpha value
     mri_lim         = 85;     % +/- axis limits of MNI head image
-    
+    icadefs;
     g = finputcheck( varargin, { 'mriview'   { 'string','cell' 'real' }  { { 'sagital','axial','coronal','top','side','rear' } {} [] }   'top';
                         'mixmode'   'string'   { 'add','overwrite','min' }     'add';
                         'mrislices' 'float'    []                        [];
                         'view'      'float'    []                        [];
                         'geom'      'float'    []                        [];
-                        'cmap'      'float'    []                        jet(64);
+                        'cmap'      'float'    []                        feval(DEFAULT_COLORMAP, 64);
                         'cmax'      'float'    []                        [];
                         'mixfact'   'float'    []                        0.5;
                         'cmin'      'float'    []                        0;
@@ -406,7 +406,7 @@ function [newprob3d maxdens] = prepare_dens(prob3d, g, col);
     maxdens = max(prob3d(:));
     ncolors = size(g.cmap,1);
     
-    prob3d    = round((prob3d-g.cmin)/(g.cmax - g.cmin)*(ncolors-1))+1; % project desnity image into the color space: [1:ncolors]
+    prob3d    = round((prob3d-g.cmin)/(g.cmax - g.cmin)*(ncolors-1))+1; % project density image into the color space: [1:ncolors]
     prob3d( find(prob3d > ncolors) ) = ncolors;
     prob3d( find(prob3d < 1))        = 1; % added by Makoto
     newprob3d = zeros(size(prob3d,1), size(prob3d,2), size(prob3d,3), 3);

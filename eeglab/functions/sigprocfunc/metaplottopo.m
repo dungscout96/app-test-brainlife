@@ -1,6 +1,6 @@
-% metaplottopo() - plot concatenated multichannel data epochs in a topographic or
+% METAPLOTTOPO - plot concatenated multichannel data epochs in a topographic or
 %               rectangular array. Uses a channel location file with the same
-%               format as topoplot(), or else plots data on a rectangular grid.
+%               format as TOPOPLOT, or else plots data on a rectangular grid.
 %
 % Usage:
 %    >> axes = metaplottopo(data, 'key1', 'val1', 'key2', 'val2')
@@ -11,7 +11,7 @@
 %
 % Optional inputs:
 %  'chanlocs'  = [struct] channel structure or file plot ERPs at channel
-%                locations. See help readlocs() for data channel format.
+%                locations. See help READLOCS for data channel format.
 %  'geom'      = [rows cols] plot ERP in grid (overwrite previous option).
 %                Grid size for rectangular matrix. Example: [6 4].
 %  'title'     = [string] general plot title {def|'' -> none}
@@ -32,7 +32,7 @@
 %
 % Author: Arnaud Delorme, Scott Makeig, CERCO, CNRS, 2007-
 %
-% See also: plottopo()
+% See also: PLOTTOPO
 
 % Copyright (C) 2007, Arnaud Delorme, CERCO, arno@sccn.ucsd.edu
 %
@@ -61,7 +61,7 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 % THE POSSIBILITY OF SUCH DAMAGE.
 
-function [Axes, outchannames ]= metaplottopo(data, varargin);
+function [Axes, outchannames ]= metaplottopo(data, varargin)
 
 %
 %%%%%%%%%%%%%%%%%%%%% Graphics Settings - can be customized %%%%%%%%%%%%%%%%%%
@@ -268,7 +268,10 @@ yvals = gcapos(2)+gcapos(4)/2+PLOT_HEIGHT*yvals;  % controls height of plot
 
 Axes = [];
 fprintf('Plotting all channel...');
-for c=1:length(g.chans), %%%%%%%% for each data channel %%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~iscell(data)
+    data = { data };
+end
+for c=1:length(g.chans) %%%%%%%% for each data channel %%%%%%%%%%%%%%%%%%%%%%%%%%
 
     xcenter = xvals(c); if isnan(xcenter), xcenter = 0.5; end; 
     ycenter = yvals(c); if isnan(ycenter), ycenter = 0.5; end
@@ -285,10 +288,22 @@ for c=1:length(g.chans), %%%%%%%% for each data channel %%%%%%%%%%%%%%%%%%%%%%%%
     if ~isempty( g.plotfunc )
         %figure(curfig);
         eval( [ 'func = @' g.plotfunc ';' ] );
-        if iscell(data), tmp = { g.plotargs{1:g.datapos(1)-1} data{1}(c,:,:,:,:) g.plotargs{g.datapos(1):g.datapos(2)-1} data{2}(c,:) g.plotargs{g.datapos(2):end}};
-        else             tmp = { g.plotargs{1:g.datapos-1}    data(c,:,:,:,:)    g.plotargs{g.datapos:end} };
+        if length(data) > 1, tmp = { g.plotargs{1:g.datapos(1)-1} data{1}(c,:,:,:,:) g.plotargs{g.datapos(1):g.datapos(2)-1} data{2}(c,:) g.plotargs{g.datapos(2):end}};
+        else                 tmp = { g.plotargs{1:g.datapos(1)-1} data{1}(c,:,:,:,:) g.plotargs{g.datapos(1):end} };
         end
-        if strcmpi(g.squeeze, 'on') tmp{g.datapos} = squeeze(tmp{g.datapos}); end
+        % tmp = g.plotargs;
+        % if length(g.datapos) >= 1
+        %     tmp = [ tmp(1:g.datapos(1)-1) { data{1}(c,:,:,:,:) } tmp(g.datapos(1):end) ];
+        % end
+        % if length(g.datapos) >= 2 && length(data) > 1
+        %     tmp = [ tmp(1:g.datapos(2)-1) { data{2}(c,:,:,:,:) } tmp(g.datapos(2):end) ];
+        % end
+        % if length(g.datapos) >= 3 length(data) > 2
+        %     tmp = [ tmp(1:g.datapos(3)-1) { data{2}(c,:,:,:,:) } tmp(g.datapos(3):end) ];
+        % end
+        if strcmpi(g.squeeze, 'on')
+            tmp{g.datapos} = squeeze(tmp{g.datapos});
+        end
         tmp = { tmp{:} 'title' channames(c,:) 'plotmode' 'topo'};
         feval(func, tmp{:});
     end
@@ -355,15 +370,19 @@ end
 %        'if tmp(2)+500 > tmp2(4), tmp(2) = tmp2(4)-500; end;' ...
 %        'set(gcbf, ''''position'''', [ tmp(1) tmp(2) 560   420]);' ...
 if ~strcmpi(g.axcopycom, 'off')
-    if strcmpi(g.axcopycom, 'on')
-        g.axcopycom = [ 'axis on;' ...
-                'tmp = get(gca, ''''userdata'''');' ...
-                'if ~isempty(tmp), xlabel(tmp{1});' ...
-                'ylabel(tmp{2});' ...
-                'if length(tmp) == 3 && ~isempty(tmp{3}), legend(tmp{3}{:}); end;' ...
-                'end; clear tmp tmp2;' ];
+    if length(g.chans) > 100
+        fprintf('Disabling axis copy feature to speed up plotting');
+    else
+        if strcmpi(g.axcopycom, 'on')
+            g.axcopycom = [ 'axis on;' ...
+                    'tmp = get(gca, ''''userdata'''');' ...
+                    'if ~isempty(tmp), xlabel(tmp{1});' ...
+                    'ylabel(tmp{2});' ...
+                    'if length(tmp) == 3 && ~isempty(tmp{3}), legend(tmp{3}{:}); end;' ...
+                    'end; clear tmp tmp2;' ];
+        end
+        axcopy(gcf, g.axcopycom); % turn on popup feature
     end
-    axcopy(gcf, g.axcopycom); % turn on popup feature
 end
 icadefs;
 set(gca,'Color',BACKCOLOR);               % set the background color

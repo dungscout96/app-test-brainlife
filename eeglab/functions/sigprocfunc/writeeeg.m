@@ -43,7 +43,7 @@
 %  'T0'            - recording time [YYYY MM DD hh mm ss.ccc]
 %  'RID'           - [string] StudyID/Investigation, default is empty
 %  'REC.Hospital   - [string] default is empty
-%  'REC.Techician  - [string] default is empty
+%  'REC.Technician  - [string] default is empty
 %  'REC.Equipment  - [string] default is empty
 %  'REC.IPaddr	   - [integer array] IP address of recording system. Default is
 %                    [127,0,0,1]
@@ -102,40 +102,40 @@ HDR.FLAG.UCAL = 0; % see also https://sccn.ucsd.edu/bugzilla/show_bug.cgi?id=102
 % select file format 
 if ~isfield(HDR, 'EVENT'),                     HDR.EVENT = []; end
 if ~isfield(HDR, 'TYPE'),                      HDR.TYPE ='GDF'; end
-if ~isfield(HDR, 'Patient')                    HDR.Patient = []; end
-if ~isfield(HDR.Patient, 'ID')                 HDR.Patient.ID = 'P0000'; end
-if ~isfield(HDR.Patient, 'Sex')                HDR.Patient.Sex = 0; end
-if ~isfield(HDR.Patient, 'Name')               HDR.Patient.Name = 'Anonymous'; end
-if ~isfield(HDR.Patient, 'Handedness')         HDR.Patient.Handedness = 0; end;% 	unknown, 1:left, 2:right, 3: equal
+if ~isfield(HDR, 'Patient'),                   HDR.Patient = []; end
+if ~isfield(HDR.Patient, 'ID'),                HDR.Patient.ID = 'P0000'; end
+if ~isfield(HDR.Patient, 'Sex'),               HDR.Patient.Sex = 0; end
+if ~isfield(HDR.Patient, 'Name'),              HDR.Patient.Name = 'Anonymous'; end
+if ~isfield(HDR.Patient, 'Handedness'),        HDR.Patient.Handedness = 0; end;% 	unknown, 1:left, 2:right, 3: equal
 
 % description of recording device 
-if ~isfield(HDR,'Manufacturer')                HDR.Manufacturer = []; end
+if ~isfield(HDR,'Manufacturer'),               HDR.Manufacturer = []; end
 if ~isfield(HDR.Manufacturer, 'Name'),         HDR.Manufacturer.Name = 'BioSig/EEGLAB'; end
 if ~isfield(HDR.Manufacturer, 'Model'),        HDR.Manufacturer.Model = 'writeeeg.m'; end
 if ~isfield(HDR.Manufacturer, 'Version'),      HDR.Manufacturer.Version = '$Revision'; end
 if ~isfield(HDR.Manufacturer, 'SerialNumber'), HDR.Manufacturer.SerialNumber = '00000000'; end
 
 % recording identification, max 80 char.
-if ~isfield(HDR,'RID')                         HDR.RID = ''; end; %StudyID/Investigation [consecutive number];
-if ~isfield(HDR,'REC')                         HDR.REC = []; end
-if ~isfield(HDR.REC, 'Hospital')               HDR.REC.Hospital = ''; end; 
-if ~isfield(HDR.REC, 'Techician')              HDR.REC.Techician = ''; end
-if ~isfield(HDR.REC, 'Equipment')              HDR.REC.Equipment = ''; end
-if ~isfield(HDR.REC, 'IPaddr')             	   HDR.REC.IPaddr = [127,0,0,1]; end; % IP address of recording system 	
-if ~isfield(HDR.Patient, 'Weight')             HDR.Patient.Weight = 0; end; 	% undefined 
-if ~isfield(HDR.Patient, 'Height')             HDR.Patient.Height = 0; end;	% undefined 
-if ~isfield(HDR.Patient, 'Birthday')           HDR.Patient.Birthday = [1951 05 13 0 0 0]; end; %    undefined 
-if ~isfield(HDR.Patient, 'Impairment')         HDR.Patient.Impairment = []; end; 
-if ~isfield(HDR.Patient.Impairment, 'Heart')   HDR.Patient.Impairment.Heart = 0; end;  %	0: unknown 1: NO 2: YES 3: pacemaker 
-if ~isfield(HDR.Patient.Impairment, 'Visual')  HDR.Patient.Impairment.Visual = 0; end; %	0: unknown 1: NO 2: YES 3: corrected (with visual aid) 
-if ~isfield(HDR.Patient,'Smoking')             HDR.Patient.Smoking = 0; end;           %	0: unknown 1: NO 2: YES 
-if ~isfield(HDR.Patient,'AlcoholAbuse')        HDR.Patient.AlcoholAbuse = 0; end; 	   %	0: unknown 1: NO 2: YES 
-if ~isfield(HDR.Patient,'DrugAbuse')           HDR.Patient.DrugAbuse = 0; end;  	   %	0: unknown 1: NO 2: YES 
+if ~isfield(HDR,'RID'),                        HDR.RID = ''; end; %StudyID/Investigation [consecutive number];
+if ~isfield(HDR,'REC'),                        HDR.REC = []; end
+if ~isfield(HDR.REC, 'Hospital'),              HDR.REC.Hospital = ''; end; 
+if ~isfield(HDR.REC, 'Technician'),            HDR.REC.Technician = ''; end
+if ~isfield(HDR.REC, 'Equipment'),             HDR.REC.Equipment = ''; end
+if ~isfield(HDR.REC, 'IPaddr'),            	   HDR.REC.IPaddr = [127,0,0,1]; end; % IP address of recording system 	
+if ~isfield(HDR.Patient, 'Weight'),            HDR.Patient.Weight = 0; end; 	% undefined 
+if ~isfield(HDR.Patient, 'Height'),            HDR.Patient.Height = 0; end;	% undefined 
+if ~isfield(HDR.Patient, 'Birthday'),          HDR.Patient.Birthday = [1951, 5, 13, 0, 0, 0]; end; %    undefined 
+if ~isfield(HDR.Patient, 'Impairment'),        HDR.Patient.Impairment = []; end; 
+if ~isfield(HDR.Patient.Impairment, 'Heart'),  HDR.Patient.Impairment.Heart = 0; end;  %	0: unknown 1: NO 2: YES 3: pacemaker 
+if ~isfield(HDR.Patient.Impairment, 'Visual'), HDR.Patient.Impairment.Visual = 0; end; %	0: unknown 1: NO 2: YES 3: corrected (with visual aid) 
+if ~isfield(HDR.Patient,'Smoking'),            HDR.Patient.Smoking = 0; end;           %	0: unknown 1: NO 2: YES 
+if ~isfield(HDR.Patient,'AlcoholAbuse'),       HDR.Patient.AlcoholAbuse = 0; end; 	   %	0: unknown 1: NO 2: YES 
+if ~isfield(HDR.Patient,'DrugAbuse'),          HDR.Patient.DrugAbuse = 0; end;  	   %	0: unknown 1: NO 2: YES 
 
 % recording time [YYYY MM DD hh mm ss.ccc]
-if ~isfield(HDR,'T0')                          HDR.T0 = clock; end
-if ~isfield(HDR,'SPR')                         HDR.SPR = size(x,2); end
-if  isfield(HDR,'label')                       HDR.Label = HDR.label; HDR = rmfield(HDR, 'label'); end
+if ~isfield(HDR,'T0'),                         HDR.T0 = clock; end
+if ~isfield(HDR,'SPR'),                        HDR.SPR = size(x,2); end
+if  isfield(HDR,'label'),                      HDR.Label = HDR.label; HDR = rmfield(HDR, 'label'); end
 if HDR.SPR > 1000, HDR.SPR = round(srate); end
    
 % channel identification, max 80 char. per channel
@@ -209,8 +209,6 @@ HDR.NS = size(x,1);
 % However, likely BIOSIG takes care of that now because there is no
 % difference when the code below is added
 if strcmpi(HDR.TYPE, 'BDF')
-    HDR.PhysMax = max(x',[],1);
-    HDR.PhysMin = min(x',[],1);
     % BDF uses 24 bit signed integers 
     HDR.DigMax = repmat(2^23-1,1,HDR.NS);	
     HDR.DigMin = repmat(-2^23,1,HDR.NS);
@@ -224,14 +222,22 @@ if ~isfield(HDR,'PhysDim')
     HDR.PhysDim = cell(1,HDR.NS);
     HDR.PhysDim(:) = { 'uV' };
 end
+% from https://github.com/INCF/p3-validator/blob/a0365b4d3a1ca21ac3c18d3fd1b8f1e63f35eeb8/trunk/lib/eeglab9_0_4_5s/external/biosig-partial/t200_FileAccess/physicalunits.m#L225
+if ~isfield(HDR,'PhysDimCode')
+    HDR.PhysDimCode = zeros(1,HDR.NS);
+    HDR.PhysDimCode(:) = 4256 + 19;
+end
 
 % Duration of one block in seconds
 HDR.SampleRate = srate;
 HDR.Dur = HDR.SPR/HDR.SampleRate;
 
 % define datatypes and scaling factors
-HDR.PhysMax = max(x, [], 2);
-HDR.PhysMin = min(x, [], 2);
+absMax = max(abs(x(:)));
+HDR.PhysMax = repmat(absMax, [size(x,1),1]);
+HDR.PhysMin = -HDR.PhysMax;
+fprintf('Unifying channel resolution, clipping at +-%d uV \n', absMax)
+
 if strcmp(HDR.TYPE, 'GDF')
     HDR.GDFTYP = 16*ones(1,HDR.NS);  % float32
     HDR.DigMax  = ones(HDR.NS,1)*100;  % FIXME: What are the correct values for float32?

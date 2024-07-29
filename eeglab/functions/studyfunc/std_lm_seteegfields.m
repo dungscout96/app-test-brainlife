@@ -1,10 +1,11 @@
-% std_lm_seteegfields() - set limo fields in eeg sets
+% STD_LM_SETEEGFIELDS - set limo fields in eeg sets
 %
 % Usage:
-%   >>   EEG = std_lm_seteegfields(STUDY,index,'datatype','Channels','format', 'cell')
+%   >>   EEG = std_lm_seteegfields(STUDY,EEG,index,'datatype','Channels','format', 'cell')
 %
 % Inputs:
 %      STUDY    - studyset structure containing some or all files in EEG
+%      EEG      - EEG dataset
 %      index    - index of dataset in STUDY.datasetinfo
 %
 % Optional inputs:
@@ -96,6 +97,11 @@ end
 %  --------------
 path_tmp = rel2fullpath(STUDY.filepath,STUDY.datasetinfo(index).filepath); 
 name = fullfile(path_tmp, STUDY.datasetinfo(index).subject);
+name2 = '';
+if ~isempty(STUDY.datasetinfo(index).session) && length(STUDY.session) > 1
+    name2 = name;
+    name  = fullfile(path_tmp, [ STUDY.datasetinfo(index).subject sprintf('_ses-%2.2d',  STUDY.datasetinfo(index).session) ]);
+end
 
 %% Channels: update EEG.set file
 %  -----------------------------
@@ -108,7 +114,7 @@ end
 % DATERP
 if strcmp(opt.erp,'on')
     ext = [ prefix 'erp' ];
-    EEG.etc.datafiles.(ext) = getfilename(name, [ '.' ext ]);
+    EEG.etc.datafiles.(ext) = getfilename(name, name2, [ '.' ext ]);
     data = load('-mat',EEG.etc.datafiles.(ext));
     EEG.etc.timeerp = data.times;
 end
@@ -116,7 +122,7 @@ end
 % DATSPEC
 if strcmp(opt.spec,'on')
     ext = [ prefix 'spec' ];
-    EEG.etc.datafiles.(ext) = getfilename(name, [ '.' ext ]);
+    EEG.etc.datafiles.(ext) = getfilename(name, name2, [ '.' ext ]);
     data = load('-mat',EEG.etc.datafiles.(ext));
     EEG.etc.freqspec = data.freqs;
 end
@@ -124,7 +130,7 @@ end
 % DAT TIMEF
 if strcmp(opt.timef,'on')
     ext = [ prefix 'timef' ];
-    EEG.etc.datafiles.(ext) = getfilename(name, [ '.' ext ]);
+    EEG.etc.datafiles.(ext) = getfilename(name, name2, [ '.' ext ]);
     EEG.etc.datafiles.datersp  = EEG.etc.datafiles.(ext);
     data = load('-mat',EEG.etc.datafiles.(ext),'times','freqs');
     EEG.etc.timeersp = data.times;
@@ -142,15 +148,15 @@ nit = 1; if iscell(filepath), nit = length(filepath);end
 
 for i = 1:nit
     if iscell(filepath),pathtmp = filepath{i}; else pathtmp = filepath; end
-    if strfind(pathtmp(end),filesep), pathtmp = pathtmp(1:end-1); end % Getting rid of filesep at the end
-    if strfind(pathtmp(1:2),['.' filesep])
-        if iscell(filepath),
+    if ~isempty(pathtmp) && contains(pathtmp(end),filesep), pathtmp = pathtmp(1:end-1); end % Getting rid of filesep at the end
+    if ~isempty(pathtmp) && contains(pathtmp(1:2),['.' filesep])
+        if iscell(filepath)
             file_fullpath{i} = fullfile(studypath,pathtmp(3:end));
         else
             file_fullpath = fullfile(studypath,pathtmp(3:end));
         end
     else
-        if iscell(filepath),
+        if iscell(filepath)
             file_fullpath{i} = pathtmp;
         else
             file_fullpath = pathtmp;
@@ -158,12 +164,16 @@ for i = 1:nit
     end
 end
 
-function name = getfilename(name, ext)
+function name = getfilename(name, name2, ext)
 
 if ~exist([name ext],'file')
-    tmp = dir([name '*' ext ]);
-    name = fullfile(tmp(1).folder,tmp(1).name);
-    warning('couldn''t find a direct match between .set and .daterp\n loading %s',name)
+    if ~exist([name2 ext],'file')
+        tmp = dir([name2 '*' ext ]);
+        name = fullfile(tmp(1).folder,tmp(1).name);
+        warning('couldn''t find a direct match between .set and .daterp, loading %s',name)
+    else
+        name = [name2 ext];
+    end
 else
     name = [name ext];
 end

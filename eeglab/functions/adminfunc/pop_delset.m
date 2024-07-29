@@ -1,4 +1,4 @@
-% pop_delset() - Delete a dataset from the variable containing
+% POP_DELSET - Delete a dataset from the variable containing
 %                all datasets.
 %
 % Usage: >> ALLEEG = pop_delset(ALLEEG, indices);
@@ -11,7 +11,7 @@
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 2001
 %
-% See also: pop_copyset(), eeglab()
+% See also: POP_COPYSET, EEGLAB
 
 % Copyright (C) 2001 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -49,12 +49,11 @@ if nargin < 1
 	help pop_delset;
 	return;
 end
-if isempty( ALLSET )
-	error('Cannot delete dataset. Restart eeglab to clear all dataset information');
-    return;
-end;    
+if length( ALLSET ) < 2
+    error( [ 'Cannot delete dataset when there is only one of them. Restart EEGLAB' 10 'or use the menu item in the File menu to clear all datasets' ]);
+end
 
-if nargin < 2 || set_in < 0
+if nargin < 2 || (length(set_in)==1 && set_in < 0)
 	% which set to delete
 	% -----------------
 	promptstr    = { 'Dataset(s) to delete:' };
@@ -62,16 +61,18 @@ if nargin < 2 || set_in < 0
 		inistr       = { int2str(-set_in) };
 	else
 		inistr       = { '1' };
-	end
-	result       = inputdlg2( promptstr, 'Delete dataset -- pop_delset()', 1,  inistr, 'pop_delset');
-	size_result  = size( result );
-	if size_result(1) == 0 return; end
-	set_in   	 = eval( [ '[' result{1} ']' ] );
+    end
+    result       = inputdlg2( promptstr, 'Delete dataset -- pop_delset()', 1,  inistr, 'pop_delset');
+    size_result = size(result);
+    if size_result(1) == 0
+        return;
+    end
+    set_in   	 = eval( [ '[' result{1} ']' ] );
 end
 
 if isempty(set_in)
 	return;
-end;	
+end
 
 A = fieldnames( ALLSET );
 A(:,2) = cell(size(A));
@@ -87,5 +88,5 @@ for i = set_in
 end
     
 % command = sprintf('%s = pop_delset( %s, [%s] );', inputname(1), inputname(1), int2str(set_in));
-command = sprintf('EEG = pop_delset( EEG, [%s] );', int2str(set_in));
+command = sprintf('ALLEEG = pop_delset( ALLEEG, [%s] );', int2str(set_in));
 return;

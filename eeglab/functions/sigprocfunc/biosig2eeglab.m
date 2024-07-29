@@ -1,4 +1,4 @@
-% biosig2eeglab() - convert BIOSIG structue to EEGLAB structure
+% BIOSIG2EEGLAB - convert BIOSIG structure to EEGLAB structure
 %
 % Usage:
 %   >> OUTEEG = pop_biosig2eeglab(hdr, data, interval);
@@ -76,12 +76,22 @@ EEG = eeg_emptyset;
 
 % convert to seconds for sread
 % ----------------------------
-if max(dat.InChanSelect) > size(DAT,1)
+if ~isempty(channels)
+    dat.InChanSelect = channels;
+    if isa(DAT, 'single')
+        error('Cannot select channels when using memory mapping')
+    end
+end
+if ~isfield(dat, 'InChanSelect') && max(dat.InChanSelect) > size(DAT,1)
     dat.InChanSelect = [1:size(DAT,1)];
 end
 EEG.nbchan          = length(dat.InChanSelect); %= size(DAT,1);
 EEG.srate           = dat.SampleRate(1);
-EEG.data            = DAT(dat.InChanSelect,:);  %DAT
+if isa(DAT, 'single')
+    EEG.data            = DAT(dat.InChanSelect,:);  %DAT
+else
+    EEG.data            = DAT;  %DAT
+end
 clear DAT;
 % try  % why would you do the following???????  JO
 %     EEG.data            = EEG.data';
@@ -100,12 +110,16 @@ if isfield(dat,'T0')
     EEG.etc.T0 = dat.T0; % added sjo
 end
 
+statusChannelPresent = false;
 if isfield(dat, 'Label') && ~isempty(dat.Label)
     if ischar(dat.Label)
         EEG.chanlocs = struct('labels', cellstr(char(dat.Label(dat.InChanSelect)))); % 5/8/2104 insert (dat.InChanSelect) Ramon
     else
         % EEG.chanlocs = struct('labels', dat.Label(1:min(length(dat.Label), size(EEG.data,1))));
         EEG.chanlocs = struct('labels', dat.Label(dat.InChanSelect)); % sjo added 120907 to avoid error below % 5/8/2104 insert (dat.InChanSelect) Ramon
+        if isequal(EEG.chanlocs(end).labels, 'Status')
+            statusChannelPresent = true;
+        end
     end
     if length(EEG.chanlocs) > EEG.nbchan, EEG.chanlocs = EEG.chanlocs(1:EEG.nbchan); end
     
@@ -185,6 +199,8 @@ if importevent
             disp('Warning: event extraction failure, the last channel contains data');
         elseif length(unique(EEG.data(end, :))) > 1000
             disp('Warning: event extraction failure, the last channel contains data');
+        elseif length(unique(EEG.data(end,:))) == 1 && ~statusChannelPresent 
+            fprintf('Empty last channel is likely a data channel not event channel\n');
         else
             thiscode = 0;
             for p = 1:size(EEG.data,2)*size(EEG.data,3)-1
@@ -205,7 +221,12 @@ if importevent
                 EEG.event(i).epoch = ceil(EEG.event(i).latency/EEG.pnts);
             end
         end
-        EEG = eeg_checkset(EEG, 'eventconsistency');
+        if length(EEG.event) > 100000
+            disp('More than 100000 events detected. This is too much for EEGLAB to handle (and likely an issue with importing the data), removing event structure')
+            EEG.event = [];
+        else
+            EEG = eeg_checkset(EEG, 'eventconsistency');
+        end
     end
 
     if ~isempty(dat.EVENT.POS)    
@@ -226,7 +247,7 @@ if importevent
 
         EEG = eeg_checkset(EEG, 'eventconsistency');
     elseif isempty(EEG.event) 
-        disp('Warning: no event found. Events might be embeded in a data channel.');
+        disp('Warning: no event found. Events might be embedded in a data channel.');
         disp('         To extract events, use menu File > Import Event Info > From data channel');
     end
 end

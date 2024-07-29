@@ -1,4 +1,4 @@
-% plugin_menu() - main function to install EEGLAB plugins
+% PLUGIN_MENU - main function to install EEGLAB plugins
 %
 % To install plugins from the command line, type in
 %
@@ -40,9 +40,12 @@ FONTSIZE = 0; % set to 4 for high-res screen
 % type may be 'import' or 'process'
 restartEeglabFlag = false;
 plugin = plugin_getweb('plugin_check', pluginlist);
+
+% remove plugins which have been removed
 if isempty(plugin)           
-    errordlg2(['Either you are offline, a firewall is blocking EEGLAB from accessing its' char(10) ...
-        'plugin server or there is a problem with Java. For Java problems, refer to' char(10) ...
+    errordlg2(['Either you are offline, MATLAB is not allowed to access the web,' char(10) ...
+        'a firewall is blocking EEGLAB from accessing its plugin server, or there' char(10) ...
+        'is a problem with the version of Java. For Java problems, refer to' char(10) ...
         'https://github.com/sccn/eeglab/issues/20']);
     return;
 end
@@ -58,25 +61,54 @@ plugin = plugin(scoreOrder);
 % ------------------
 % plugins to install
 % ------------------
+eeglab_options;
+if option_htmlingraphics
+    warning('GUI slow to pop up or showing <html> tags? Try disabling HTML graphics in the Preferences menu (first show advanced options).')
+    search_icon_path = ['<html><img width=17 height=16 src="' 'file://' fullfile(fileparts(which('plugin_menu.m')),'search-icon.png') '"> &nbsp; Search</html>'];          
+else
+    search_icon_path = 'Search';          
+end
 for iRow = 1:length(plugin)
-    plugin(iRow).text = [ '<html><font size=+' int2str(FONTSIZE) '> ' htmlrating(plugin(iRow).rating, plugin(iRow).numrating) ];
-    if plugin(iRow).installed
-        if plugin(iRow).installorupdate
-            plugin(iRow).text = [ plugin(iRow).text '<b><font color=red>' ];
-        else
-            plugin(iRow).text = [ plugin(iRow).text '<b>' ];
+    if option_htmlingraphics
+        plugin(iRow).text = [ '<html><font size=+' int2str(FONTSIZE) '> ' htmlrating(plugin(iRow).rating, plugin(iRow).numrating) ];
+        if plugin(iRow).installed
+            if plugin(iRow).installorupdate
+                plugin(iRow).text = [ plugin(iRow).text '<b><font color=red>' ];
+            else
+                plugin(iRow).text = [ plugin(iRow).text '<b>' ];
+            end
         end
+        plugin(iRow).text =  [ plugin(iRow).text plugin(iRow).name ' v'  plugin(iRow).version ];
+        if plugin(iRow).installed && plugin(iRow).installorupdate
+            plugin(iRow).text =  [ plugin(iRow).text ' update available ' ];
+        end
+        plugin(iRow).text =  [ plugin(iRow).text ' (' int2str(plugin(iRow).downloads) ' downloads' ];
+        if ~isnan(plugin(iRow).numrating) && plugin(iRow).numrating
+            plugin(iRow).text =  [ plugin(iRow).text '; ' int2str(plugin(iRow).numrating) ' rating' ];
+        end
+        if plugin(iRow).removed
+            plugin(iRow).text =  [ plugin(iRow).text '; OBSOLETE, SEE HELP' ];
+        end
+        plugin(iRow).text =  [ plugin(iRow).text ')</b></font></font></html>' ];
+        plugin(iRow).strsearch = lower([ plugin(iRow).name plugin(iRow).rawtags plugin(iRow).description ]);  
+    else
+        plugin(iRow).text = '';
+        if plugin(iRow).installed
+            plugin(iRow).text = [ plugin(iRow).text '****' ];
+        end
+        plugin(iRow).text =  [ plugin(iRow).text plugin(iRow).name ' v'  plugin(iRow).version ];
+        if plugin(iRow).installed && plugin(iRow).installorupdate
+            plugin(iRow).text =  [ plugin(iRow).text ' update available ' ];
+        end
+        plugin(iRow).text =  [ plugin(iRow).text ' (' int2str(plugin(iRow).downloads) ' downloads)' ];
+        if plugin(iRow).removed
+            plugin(iRow).text =  [ plugin(iRow).text '; OBSOLETE, SEE HELP' ];
+        end
+        if plugin(iRow).installed
+            plugin(iRow).text =  [ plugin(iRow).text '****' ];
+        end
+        plugin(iRow).strsearch = lower([ plugin(iRow).name plugin(iRow).rawtags plugin(iRow).description ]);  
     end
-    plugin(iRow).text =  [ plugin(iRow).text plugin(iRow).name ' v'  plugin(iRow).version ];
-    if plugin(iRow).installed && plugin(iRow).installorupdate
-        plugin(iRow).text =  [ plugin(iRow).text ' update available ' ];
-    end
-    plugin(iRow).text =  [ plugin(iRow).text ' (' int2str(plugin(iRow).downloads) ' downloads' ];
-    if ~isnan(plugin(iRow).numrating) && plugin(iRow).numrating
-        plugin(iRow).text =  [ plugin(iRow).text '; ' int2str(plugin(iRow).numrating) ' rating' ];
-    end
-    plugin(iRow).text =  [ plugin(iRow).text ')</b></font></font></html>' ];
-    plugin(iRow).strsearch = lower([ plugin(iRow).name plugin(iRow).rawtags plugin(iRow).description ]);  
 end
 
 %cb_select = 'tmpobj = get(gcbf, ''userdata''); tmpstr = tmpobj(get(gcbo, ''value'')).longdescription; tmpstr = textwrap(findobj(gcbf, ''tag'', ''description''), {tmpstr}); set(findobj(gcbf, ''tag'', ''description''), ''string'', tmpstr); clear tmpobj tmpstr;';
@@ -94,16 +126,16 @@ filterList2 = { 'No topic filter' ...
                'Filter by study' ...
                'Filter by time-freq' ...
                'Filter by other' };
-search_icon_path = ['file://' fullfile(fileparts(which('plugin_menu.m')),'search-icon.png')];           
+
 uilist =  {
     { 'style', 'text', 'string', 'List of plugins (bolded means installed)' 'fontweight' 'bold' } ...
     { 'style', 'popupmenu', 'string', filterList1 'callback' 'plugin_uifilter(gcbf);' 'tag' 'filter1' } ...
     { 'style', 'popupmenu', 'string', filterList2 'callback' 'plugin_uifilter(gcbf);' 'tag' 'filter2' } ...
-    { 'style', 'pushbutton', 'string', ['<html><img width=17 height=16 src="' search_icon_path '"> &nbsp; Search</html>'] 'callback' 'plugin_search(gcbf);' 'tag' 'search' 'tooltipstring' 'Enter search term' } ...
+    { 'style', 'pushbutton', 'string', search_icon_path 'callback' 'plugin_search(gcbf);' 'tag' 'search' 'tooltipstring' 'Enter search term' } ...
     { 'style', 'listbox', 'string', { plugin.text } 'callback' 'plugin_uiupdate(gcbf);' 'Min', 0, 'Max', 2, 'value' [] 'tag', 'pluginlist' 'fontsize', 16, 'tooltipstring', [ 'Bold plugins are installed.' 10 'Red plugins need updating.' 10 '(Wong font size? Change it in plugin_menu.m)' ] } ...
-    { 'style', 'pushbutton', 'string', [ 'Rate this plugin' ] 'tag' 'rating' } ...
-    { 'style', 'pushbutton', 'string', [ 'Web documentation' ] 'tag' 'documentation' } ...
-    { 'style', 'pushbutton', 'string', [ 'Upload new plugin' ] 'tag' 'upload' 'callback' [ 'web(''http://sccn.ucsd.edu/eeglab/plugin_uploader/upload_form.php'', ''-browser'');' ]} ...
+    { 'style', 'pushbutton', 'string', 'Rate this plugin' 'tag' 'rating' } ...
+    { 'style', 'pushbutton', 'string', 'Web documentation' 'tag' 'documentation' } ...
+    { 'style', 'pushbutton', 'string', 'Create your own plugin' 'tag' 'upload' 'callback' 'web(''https://eeglab.org/tutorials/contribute/design_plugin.htmlc'', ''-browser'');'} ...
     { 'style', 'text', 'string', 'Tags:' 'fontweight' 'bold' } ...
     { 'style', 'text', 'string', 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' 'tag' 'tags' } ...
     { 'style', 'text', 'string', 'Status:' 'fontweight' 'bold' } ...
@@ -123,7 +155,10 @@ usrDat.allplugins = plugin;
 usrDat.selectedplugins = plugin;
 usrDat.selection = [];
 fig = figure('visible', 'off');
-supergui('fig', fig, 'uilist', uilist, 'geomhoriz', {[0.9 0.5 0.5 0.5] 1 [1 1 1] [0.2 1] [0.2 1] [0.2 1] 1 1 1 [0.43 0.37 0.4 0.5]}, 'geomvert', [1 10 1 1 1 1 1 2.5 1 1], 'userdata', usrDat);
+geomhoriz = {[0.9 0.5 0.5 0.5] 1 ...
+             [1 1 1] ...
+             [0.2 1] [0.2 1] [0.2 1] 1 1 1 [0.43 0.37 0.4 0.5]};
+supergui('fig', fig, 'uilist', uilist, 'geomhoriz', geomhoriz, 'geomvert', [1 10 1 1 1 1 1 2.5 1 1], 'userdata', usrDat);
 %pos = get(fig, 'position');
 %set(fig, 'position', [pos(1) pos(2) pos(3)/841*200 pos(4) ]);
 

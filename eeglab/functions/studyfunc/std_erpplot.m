@@ -1,4 +1,4 @@
-% std_erpplot() - Command line function to plot STUDY cluster component ERPs. Either 
+% STD_ERPPLOT - Command line function to plot STUDY cluster component ERPs. Either 
 %                 displays grand mean ERPs for all requested clusters in the same figure, 
 %                 with ERPs for different conditions (if any) plotted in different colors. 
 %                 Else, displays ERP for each specified cluster in separate figures 
@@ -7,9 +7,9 @@
 %                 component ERPs were computed and saved in the STUDY EEG
 %                 datasets. 
 %                 These can be computed during pre-clustering using the gui-based 
-%                 function pop_preclust() or the equivalent command line functions 
-%                 eeg_createdata() and eeg_preclust(). Called by pop_clustedit().
-%                 and std_propplot().
+%                 function POP_PRECLUST or the equivalent command line functions 
+%                 EEG_CREATEDATA and EEG_PRECLUST. Called by POP_CLUSTEDIT.
+%                 and STD_PROPPLOT.
 % Usage:    
 %   >> [STUDY] = std_erpplot(STUDY, ALLEEG, key1, val1, key2, val2);  
 %   >> [STUDY erpdata erptimes pgroup pcond pinter] = std_erpplot(STUDY, ALLEEG, ...);  
@@ -17,7 +17,7 @@
 % Inputs:
 %   STUDY      - EEGLAB STUDY set comprising some or all of the EEG datasets in ALLEEG.
 %   ALLEEG     - global EEGLAB vector of EEG structures for the datasets included 
-%                in the STUDY. A STUDY set ALLEEG is typically created by load_ALLEEG().  
+%                in the STUDY. A STUDY set ALLEEG is typically created by LOAD_ALLEEG.  
 % Optional inputs for channel plotting:
 %   'channels' - [numeric vector]  specific channel group to plot. By
 %                default, the grand mean channel ERP is plotted (using the 
@@ -45,9 +45,9 @@
 %                Note that 'comps', 'all' is equivalent to 'plotsubjects', 'on'.
 %
 % Other optional inputs:
-%   'key','val' - All optional inputs to pop_erpparams() are also accepted here
+%   'key','val' - All optional inputs to POP_ERPPARAMS are also accepted here
 %                 to plot subset of time, statistics etc. The values used by default
-%                 are the ones set using pop_erpparams() and stored in the
+%                 are the ones set using POP_ERPPARAMS and stored in the
 %                 STUDY structure.
 %
 % Outputs:
@@ -57,21 +57,21 @@
 %                size of cell array is [nconds x ngroups]. Size of each element
 %                is [times x subjects] for data channels or [times x components]
 %                for component clusters. This array may be gicen as input 
-%                directly to the statcond() function or std_stats function
+%                directly to the STATCOND function or STD_STAT function
 %                to compute statistics.
 %   erptimes   - [array] ERP time point latencies.
 %   pgroup     - [array or cell] p-values group statistics. Output of the 
-%                statcond() function.
-%   pcond      - [array or cell] condition statistics. Output of the statcond() 
+%                STATCOND function.
+%   pcond      - [array or cell] condition statistics. Output of the STATCOND 
 %                function.
 %   pinter     - [array or cell] groups x conditions statistics. Output of
-%                statcond() function.
+%                STATCOND function.
 %
 %   Example:
 %            >> [STUDY] = std_erpplot(STUDY,ALLEEG, 'clusters', 2, 'comps', 'all');
 %               % Plot cluster-2 component ERPs plus the mean ERP in bold. 
 %
-%  See also  pop_clustedit(), pop_preclust(), eeg_createdata(), eeg_preclust(). std_propplot()
+%  See also  POP_CLUSTEDIT, POP_PRECLUST, EEG_CREATEDATA, EEG_PRECLUST, STD_PROPPLOT
 %
 % Authors: Arnaud Delorme, CERCO, August, 2006-
 
@@ -160,9 +160,10 @@ opt = finputcheck( options, ...
                                'channels'    'cell'    []              {};
                                'clusters'    'integer' []              [];
                                'datatype'    'string'  {}              'erp';
-                               'mode'        'string'  []              ''; % for backward compatibility (now used for statistics)
-                               'comps'       { 'string','integer' } [] []; % for backward compatibility
-                               'statmode'    'string'  { 'subjects','common','trials' } 'subjects'; % ignored
+                               'mode'  'string'  []  '';
+                               'comps'  { 'string', 'integer' }  []  [];
+                               'statmode'    'string'  { 'subjects','common','trials' } 'subjects';
+                               'avgmode'     'string'  { 'mean','rms','median' } 'mean';
                                'plotmode'    'string'  { 'normal','condensed' }  'normal';
                                'unitx'       'string'  { 'ms','Hz' }    'ms';
                                'plotsubjects' 'string' { 'on','off' }  'off';
@@ -190,7 +191,7 @@ if length(STUDY.design(opt.design).variable) > 1, allgroups     = STUDY.design(o
 % for backward compatibility
 % --------------------------
 stats = statstruct.etc.statistics;
-stats.fieldtrip.channelneighbor = struct([]); % asumes one channel or 1 component
+stats.fieldtrip.channelneighbor = struct([]); % assumes one channel or 1 component
 if isempty(STUDY.design(opt.design).variable)
     stats.paired = { };
 else
@@ -208,6 +209,10 @@ end
 if ~isempty(params.topotime) && ~isnan(params.topotime(1)) && length(opt.channels) < 5 && isempty(opt.clusters)
     warndlg2(strvcat('ERP parameters indicate that you wish to plot scalp maps', 'Select at least 5 channels to plot topography'));
     return;
+end
+
+if ~strcmpi(opt.avgmode, 'mean') && (isempty(opt.channels) || isempty(params.topotime))
+    error('Can only change avgmode when plotting scalp topographies')
 end
 
 plotcurveopt = {};
@@ -313,7 +318,7 @@ if ~isempty(opt.channels)
     [pcond, pgroup, pinter] = std_stat(erpdata, stats);
     if (~isempty(pcond) && length(pcond{1}) == 1) || (~isempty(pgroup) && length(pgroup{1}) == 1), pcond = {}; pgroup = {}; pinter = {}; end % single subject STUDY                                
     if ~isempty(params.topotime) && length(opt.channels) > 5 && ndims(erpdata{1}) < 3, pcond = {}; pgroup = {}; pinter = {}; end % topo plotting for single subject
-    if strcmpi(opt.noplot, 'on') return; end
+    if strcmpi(opt.noplot, 'on'), return; end
     
     % get titles (not included in std_erspplot because it is not possible
     % to merge channels for that function
@@ -339,6 +344,9 @@ if ~isempty(opt.channels)
     % plot
     % ----
     indNonEmpty = find(~cellfun(@isempty, erpdata(:)));
+    if isempty(indNonEmpty)
+        error('All conditions are empty')
+    end
     if ~isreal(erpdata{indNonEmpty(1)}(1)) % for spectrum FFT data
         tmperpdata = cellfun(@(x)x.*conj(x), erpdata, 'uniformoutput', false);
     else
@@ -346,7 +354,7 @@ if ~isempty(opt.channels)
     end
     if ~isempty(params.topotime) && all(~isnan(params.topotime))
         std_chantopo(tmperpdata, 'groupstats', pgroup, 'condstats', pcond, 'interstats', pinter, 'caxis', params.ylim, ...
-                                      'chanlocs', locs, 'threshold', alpha, 'titles', alltitles, 'topoplotopt', opt.topoplotopt, 'effect', stats.effect);
+                                 'mode', opt.avgmode, 'chanlocs', locs, 'threshold', alpha, 'titles', alltitles, 'topoplotopt', opt.topoplotopt, 'effect', stats.effect);
     else
         std_plotcurve(alltimes, tmperpdata, 'groupstats', pgroup, 'legend', alllegends, 'condstats', pcond, 'interstats', pinter, ...
             'chanlocs', locs, 'titles', alltitles, 'plotsubjects', opt.plotsubjects, 'plotstderr', opt.plotstderr, ...

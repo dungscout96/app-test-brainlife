@@ -1,4 +1,4 @@
-% pop_importerplab() - import ERPLAB event list file and bin file into
+% POP_IMPORTERPLAB - import ERPLAB event list file and bin file into
 %                      EEGLAB event structure for use in STUDY processing
 %
 % Usage:
@@ -229,7 +229,9 @@ str(find(str == '(')) = '_';
 str(find(str == '/')) = '_';
 str(find(str == '-')) = '_';
 str(find(str == '&')) = '_';
-if ~isempty(str2num(str(1))) str = [ 'f' str ]; end
+if ~isempty(str2num(str(1)))
+    str = ['f' str];
+end
 
 function str = doubledeblank(str)
 

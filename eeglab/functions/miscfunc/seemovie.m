@@ -1,16 +1,16 @@
-% seemovie() - see an EEG movie produced by eegmovie()
+% SEEMOVIE - see an EEG movie produced by EEGMOVIE
 %
 % Usage: >> seemovie(Movie,ntimes,Colormap)
 %
 % Inputs:
-%         Movie    = Movie matrix returned by eegmovie()
+%         Movie    = Movie matrix returned by EEGMOVIE
 %         ntimes   = Number of times to display {0 -> -10}
 %                    If ntimes < 0, movie will play forward|backward
-%         Colormap = Color map returned by eegmovie() {0 -> default}
+%         Colormap = Color map returned by EEGMOVIE {0 -> default}
 %
 % Author: Scott Makeig & Colin Humphries, CNL / Salk Institute, 6/3/97
 %
-% See also: eegmovie()
+% See also: EEGMOVIE
 
 % Copyright (C) 6/3/97 Scott Makeig & Colin Humphries, CNL / Salk Institute, La Jolla CA
 %
@@ -45,7 +45,7 @@
 
 function seemovie(Movie,ntimes,Colormap)
 
-fps = 10;   % projetion speed (requested frames per second)
+fps = 10;   % projection speed (requested frames per second)
 
 if nargin<1
    help seemovie
@@ -55,7 +55,7 @@ if nargin<3
     Colormap = 0;
 end
 if nargin<2
-	ntimes = -10;    % default to playing foward|backward endlessly
+	ntimes = -10;    % default to playing forward|backward endlessly
 end
 if ntimes == 0
 	ntimes = -10;
@@ -66,10 +66,12 @@ axes('Position',[0 0 1 1]);
 if size(Colormap,2) == 3 % if colormap user-defined
 	colormap(Colormap)
 else
-	colormap([jet(64);0 0 0]);    % set up the default topoplot color map
+    icadefs;
+    cmap = feval(DEFAULT_COLORMAP, 64);
+	colormap([cmap;0 0 0]);    % set up the default topoplot color map
 end
 
-if ntimes > 0,
+if ntimes > 0
  fprintf('Movie will play slowly once, then %d times faster.\n',ntimes);
 else 
  fprintf('Movie will play slowly once, then %d times faster forwards and backwards.\n',-ntimes);

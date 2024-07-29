@@ -1,4 +1,4 @@
-% headplot() - plot a spherically-splined EEG field map on a semi-realistic 
+% HEADPLOT - plot a spherically-splined EEG field map on a semi-realistic 
 %              3-D head model. Can 3-D rotate the head image using the left 
 %              mouse button.
 % Example:
@@ -14,9 +14,9 @@
 %
 % Required Setup-mode Inputs: 
 %
-%   elocs         - file of electrode locations (compatible with readlocs()),
+%   elocs         - file of electrode locations (compatible with READLOCS),
 %                   or EEG.chanlocs channel location structure. If the channel 
-%                   file extension is not standard, use readlocs() to load the 
+%                   file extension is not standard, use READLOCS to load the 
 %                   data file, e.g.
 %                      >> headplot('setup', ...
 %                            readlocs('myfile.xxx', 'filetype', 'besa'),...
@@ -46,7 +46,7 @@
 %                    [shiftX shiftY shiftZ pitch roll yaw scaleX scaleY scaleZ]
 %                   The transform is applied in the order shift(rotate(scale(elocs)))
 %                   by the dipfit2.* plugin function traditionaldipfit.m
-%                   This array is returned by coregister().
+%                   This array is returned by COREGISTER.
 %  'plotmeshonly' - [string] plot only mesh and electrode positions. Options are
 %                   'head' to plot the standard head mesh; 'sphere' to plot the
 %                   texture of the head on a sphere; 'off' not to plot anything.
@@ -88,7 +88,7 @@
 %   'electrode3d' - ['on'|'off'] plot electrodes in 3-D. Default is 'off'.
 %   'lighting'   - 'off' = show wire frame head {default 'on'} 
 %   'material'   - [see material function] {default 'dull'}
-%   'colormap'   -  3-column colormap matrix {default: jet(64)}
+%   'colormap'   -  3-column colormap matrix {default: turbo(64)}
 %   'verbose'    - 'off' -> no msgs, no rotate3d {default: 'on'}
 %   'orilocs'    - [channel structure or channel file name] Use original 
 %                  channel locations instead of the one extrapolated from 
@@ -100,7 +100,7 @@
 %   'transform'  - [real array] homogeneous transformation matrix to apply
 %                  to the original locations ('orilocs') before plotting them.
 %
-% Note: if an error is generated, headplot() may close the current figure
+% Note: if an error is generated, HEADPLOT may close the current figure
 %
 % Authors: Arnaud Delorme, Colin Humphries, Scott Makeig, SCCN/INC/UCSD, 
 %          La Jolla, 1998-
@@ -141,7 +141,7 @@
 % 12-13-98 implemented colorbar option using enhanced cbar -sm 
 % 12-13-98 implemented 'setup' comment option -sm 
 % 03-20-00 added cartesian electrode locations option -sm
-% 07-14-00 fixed line in calgx() -sm from -ch
+% 07-14-00 fixed line in CALGX -sm from -ch
 % 03-23-01 documented 'cartesian' locfile option -sm
 % 01-25-02 reformated help & license, added links -ad 
 % 03-21-02 added readlocs and the use of eloc input structure -ad 
@@ -202,7 +202,7 @@ if ischar(values)
                                        'ica'          'string'  { 'on','off' }             'off';
                                        'transform'    'real'    []                         DEFAULT_TRANSFORM;
                                        'comment'      'string'  []                         '' }, 'headplot', 'ignore');
-    if ischar(g), 
+    if ischar(g)
         error(g);
     end
     
@@ -266,7 +266,7 @@ if ischar(values)
     
     %newcoords = transformcoords( [ Xe Ye Ze ], [0 -pi/16 -1.57], 100, -[6 0 46]);
     %newcoords = transformcoords( [ Xeori Yeori Zeori ], g.transform(4:6), g.transform(7:9), g.transform(1:3));
-    % same performed below with homogenous transformation matrix
+    % same performed below with homogeneous transformation matrix
     
     transmat  = traditionaldipfit( g.transform ); % arno
     newcoords = transmat*[ newcoords ones(size(newcoords,1),1)]';
@@ -364,7 +364,7 @@ if ischar(values)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     fprintf('Computing %d vertices. Should take a while (see wait bar)\n',...
                       length(x))
-    fprintf('            but doesnt have to be done again for this montage...\n');
+    fprintf('            but does not have to be done again for this montage...\n');
     icadefs;
 
     gx = fastcalcgx(x,y,z,Xe,Ye,Ze);
@@ -445,14 +445,14 @@ else
    spline_file = arg1;
    
    g = finputcheck( varargin, { ...
-       'cbar'       'real'   [0 Inf]         []; % Colorbar value must be 0 or axis handle.'
-       'lighting'   'string' { 'on','off' }  'on';
+       'cbar'     , 'real'  , [0 Inf]           , [];
+       'lighting' , 'string', { 'on', 'off' }   , 'on';
        'verbose'    'string' { 'on','off' }  'on';
        'maplimits'  { 'string','real' }  []  'absmax'; 
        'title'      'string' []              '';
        'lights'     'real'   []              DEFAULT_LIGHTS;
        'view'       { 'string','real' }   [] [143 18];
-       'colormap'   'real'   []              jet(256);
+       'colormap'   'real'   []              feval(DEFAULT_COLORMAP, 64);
        'transform'  'real'   []              [];
        'meshfile'   {'string','struct' } []  DEFAULT_MESH;
        'electrodes' 'string' { 'on','off' }  'on';            
@@ -461,9 +461,11 @@ else
        'material'     'string'            [] 'dull';
        'orilocs'    { 'string','struct' } [] '';            
        'labels'     'integer' [0 1 2]        0 }, 'headplot');
-   if ischar(g) error(g); end
+   if ischar(g) 
+       error(g); 
+   end
    plotelecopt.electrodes3d = g.electrodes3d;
-   if length(g.eleccolor) > 0 && length(g.eleccolor) ~= length(values)
+   if ~isempty(g.eleccolor) && length(g.eleccolor) ~= length(values)
        error('The number of color must be the same as the number of channels to plot');
    end
 
@@ -694,7 +696,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  calcgx() - function used in 'setup'
+%  CALCGX - function used in 'setup'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [out] = calcgx(in)
@@ -736,7 +738,7 @@ if ismatlab
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  distance() - function used in 'setup'
+%  DISTANCE - function used in 'setup'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [out] = distance(w,p)
@@ -829,7 +831,7 @@ function plotelec(newElect, ElectrodeNames, HeadCenter, opt);
     
 % get mesh information
 % --------------------
-function [newPOS POS TRI1 TRI2 NORM index1 center] = getMeshData(meshfile);
+function [newPOS POS TRI1 TRI2 NORM index1 center] = getMeshData(meshfile)
 %#function mheadnew.mat
 meshpath = fileparts(which('mheadnew.mat'));
 if isdeployed
@@ -850,7 +852,7 @@ if ~isstruct(meshfile)
     fprintf('Loaded mesh file %s\n',meshfile);
     try
         meshfile = load(meshfile,'-mat');
-    catch,
+    catch
         meshfile = [];
         meshfile.POS  = load('mheadnewpos.txt', '-ascii');
         meshfile.TRI1 = load('mheadnewtri1.txt', '-ascii'); % upper head
@@ -858,7 +860,7 @@ if ~isstruct(meshfile)
         %index1 = load('mheadnewindex1.txt', '-ascii');
         meshfile.center = load('mheadnewcenter.txt', '-ascii');
     end
-end;        
+end      
         
 if isfield(meshfile, 'vol')
     if isfield(meshfile.vol, 'r')
@@ -875,8 +877,8 @@ elseif isfield(meshfile, 'bnd')
 elseif isfield(meshfile, 'TRI1')
     POS  = meshfile.POS;
     TRI1 = meshfile.TRI1;
-    try TRI2   = meshfile.TRI2;   end  % NEW
-    try center = meshfile.center; end  % NEW
+    try TRI2   = meshfile.TRI2;   catch, end  % NEW
+    try center = meshfile.center; catch, end  % NEW
 elseif isfield(meshfile, 'vertices')
     POS  = meshfile.vertices;
     TRI1 = meshfile.faces;

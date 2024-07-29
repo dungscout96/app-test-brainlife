@@ -1,11 +1,11 @@
-% std_erspplot() - plot STUDY cluster ERSPs. Displays either mean cluster ERSPs, 
+% STD_ERSPPLOT - plot STUDY cluster ERSPs. Displays either mean cluster ERSPs, 
 %                  or else all cluster component ERSPs plus the mean cluster 
 %                  ERSP in one figure per condition. The ERSPs can be plotted 
 %                  only if component ERSPs were computed and saved in the 
 %                  EEG datasets in the STUDY. These may either be computed 
 %                  during pre-clustering using the gui-based function 
-%                  pop_preclust(), or via the equivalent commandline functions 
-%                  eeg_createdata() and eeg_preclust(). Called by pop_clustedit().
+%                  POP_PRECLUST, or via the equivalent commandline functions 
+%                  EEG_CREATEDATA and EEG_PRECLUST. Called by POP_CLUSTEDIT.
 % Usage:    
 %   >> [STUDY] = std_erspplot(STUDY, ALLEEG, key1, val1, key2, val2);  
 %   >> [STUDY erspdata ersptimes erspfreqs pgroup pcond pinter] = ...
@@ -15,7 +15,7 @@
 %   STUDY    - STUDY set comprising some or all of the EEG datasets in ALLEEG.
 %   ALLEEG   - global vector of EEG structures for the datasets included 
 %              in the STUDY. ALLEEG for a STUDY set is typically created 
-%              using load_ALLEEG().  
+%              using LOAD_ALLEEG.  
 %   either 'channels' or 'cluster' inputs are also mandatory.
 %
 % Optional inputs for channel plotting:
@@ -46,27 +46,30 @@
 %   'plotmode'  - ['normal'|'condensed'|'none'] 'normal'  -> plot in a new figure; 
 %                 'condensed' -> plot all curves in the current figure in a 
 %                 condensed fashion. 'none' toggles off plotting {default: 'normal'}
-%   'key','val' - All optional inputs to pop_specparams() are also accepted here
+%   'key','val' - All optional inputs to POP_SPECPARAMS are also accepted here
 %                 to plot subset of time, statistics etc. The values used by default
-%                 are the ones set using pop_specparams() and stored in the
+%                 are the ones set using POP_SPECPARAMS and stored in the
 %                 STUDY structure.
 % Output:
 %   STUDY      - the input STUDY set structure with the plotted cluster 
-%                mean ERSPs added to allow quick replotting 
+%                mean ERSPs stored to allow quick replotting 
 %   erspdata   - [cell] ERSP data for each condition, group and subjects.
 %                size of cell array is [nconds x ngroups]. Size of each element
 %                is [freqs x times x subjects] for data channels or 
 %                [freqs x times x components] for component clusters. This 
-%                array may be gicen as input  directly to the statcond() f
-%                unction or std_stats() function to compute statistics.
+%                array may be gicen as input  directly to the STATCOND f
+%                unction or STD_STATS function to compute statistics.
 %   ersptimes  - [array] ERSP time point latencies.
 %   erspfreqs  - [array] ERSP point frequency values.
 %   pgroup     - [array or cell] p-values group statistics. Output of the 
-%                statcond() function.
-%   pcond      - [array or cell] condition statistics. Output of the statcond() 
+%                STATCOND function.
+%   pcond      - [array or cell] condition statistics. Output of the STATCOND 
 %                function.
 %   pinter     - [array or cell] groups x conditions statistics. Output of
-%                statcond() function.
+%                STATCOND function.
+%
+% Important note: This data implement baseline correction and proper
+%                 scaling.
 %
 % Example:
 %        >> [STUDY] = std_erspplot(STUDY,ALLEEG, 'clusters', 'all', ...
@@ -77,7 +80,7 @@
 % Known limitations: when plotting multiple clusters, the output
 %                    contains the last plotted cluster.
 %
-% See also: pop_clustedit(), pop_preclust(), eeg_createdata(), eeg_preclust(), pop_clustedit()
+% See also: POP_CLUSTEDIT, POP_PRECLUST, EEG_CREATEDATA, EEG_PRECLUST, POP_CLUSTEDIT
 %
 % Authors: Arnaud Delorme, CERCO, August, 2006
 
@@ -162,13 +165,13 @@ options = myrmfield( options, { 'threshold' 'statistics' } ); % for backward com
 [ opt, moreparams ] = finputcheck( options, { ...
                                'design'      'integer' [] STUDY.currentdesign;
                                'caxis'       'real'    [] [];
-                               'statmode'    'string'  [] ''; % deprecated
-                               'channels'    'cell'    []              {};
+                               'statmode'  , 'string' , [] , '';
+                               'channels'  , 'cell'   , [] , {};
                                'clusters'    'integer' []              [];
                                'datatype'    'string'  { 'itc','ersp','pac' 'erpim' } 'ersp';
                                'plottf'      'real'    []              [];
-                               'mode'        'string'  []              ''; % for backward compatibility (now used for statistics)
-                               'comps'       {'integer','string'}  []              []; % for backward compatibility
+                               'mode',        'string',  [],  '';
+                               'comps',       {'integer','string'},  [],  [];
                                'plotsubjects' 'string' { 'on','off' }  'off';
                                'noplot'      'string'  { 'on','off' }  'off';
                                'plotmode'    'string'  { 'normal','condensed','none' }  'normal';
@@ -206,7 +209,7 @@ else params.plottf = opt.plottf;
 end
 %if strcmpi(opt.mode, 'comps'), opt.plotsubjects = 'on'; end %deprecated
 stats = statstruct.etc.statistics;
-stats.fieldtrip.channelneighbor = struct([]); % asumes one channel or 1 component
+stats.fieldtrip.channelneighbor = struct([]); % assumes one channel or 1 component
 if isempty(STUDY.design(opt.design).variable)
     stats.paired = { };
 else
@@ -263,7 +266,7 @@ if ~isempty(opt.channels)
             [allersp,basesamples,basevals] = newtimefbaseln(allersp, alltimes, paramsersp);
         else
             opt.subbaseline = 'on';
-            disp('Warning: when using single-trial statistics, a common baseline is forced accross all conditions');
+            disp('Warning: when using single-trial statistics, a common baseline is forced across all conditions');
         end
     end
     
@@ -280,7 +283,7 @@ if ~isempty(opt.channels)
         if  strcmpi(params.subbaseline, 'on')
             disp('Computing common baseline has changed since EEGLAB 14: averaging baselines is now');
             disp('performed before log-transformation of the baseline - in a similar way that baseline'); 
-            disp('is averaged accross trials (log transformation is only performed at the end for display)'); 
+            disp('is averaged across trials (log transformation is only performed at the end for display)'); 
             % see above for rational for baseline
             paramsersp.singletrials = stats.singletrials;
             paramsersp.commonbase   = params.subbaseline;
@@ -385,7 +388,7 @@ if ~isempty(opt.channels)
                                      'subject', opt.subject, 'valsunit', { valunit 'ms' }, 'vals', params.plottf, 'datatype', upper(opt.datatype), ...
                                      'effect', stats.effect, 'factor1', condname, 'factor2', groupname);
             std_chantopo(allersp, 'groupstats', pgroup, 'condstats', pcond, 'interstats', pinter, 'caxis', opt.caxis, ...
-                                          'chanlocs', locs, 'threshold', alpha, 'titles', alltitles);
+                                          'chanlocs', locs, 'threshold', alpha, 'titles', alltitles, 'effect', stats.effect);
         else
             if length(locs) > 1, opt.plottopo = 'on'; else opt.plottopo = 'off'; end
             if length(locs) == 1 && size(allersp{1},3) > 1
@@ -455,7 +458,7 @@ else
             if  strcmpi(params.subbaseline, 'on')
                 disp('Computing common baseline has changed since EEGLAB 14: averaging baselines is now');
                 disp('performed before log-transformation of the baseline - in a similar way that baseline');
-                disp('is averaged accross trials (log transformation is only performed at the end for display)');
+                disp('is averaged across trials (log transformation is only performed at the end for display)');
                 % see above for rational for baseline
                 paramsersp.singletrials = stats.singletrials;
                 paramsersp.commonbase   = params.subbaseline;

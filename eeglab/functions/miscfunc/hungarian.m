@@ -1,5 +1,5 @@
 function [C,T]=hungarian(A)
-% hungarian() - Solve the assignment problem using the Hungarian method.
+% HUNGARIAN - Solve the assignment problem using the Hungarian method.
 % 
 % Usage: >> [C,T]=hungarian(A)
 %
@@ -157,7 +157,7 @@ function A=hminired(A)
 %HMINIRED Initial reduction of cost matrix for the Hungarian method.
 %
 %B=assredin(A)
-%A - the unreduced cost matris.
+%A - the unreduced cost matrix.
 %B - the reduced cost matrix with linked zeros in each row.
 
 % v1.0  96-06-13. Niclas Borlin, niclas@cs.umu.se.
@@ -199,7 +199,7 @@ function [A,C,U]=hminiass(A)
 
 [n,np1]=size(A);
 
-% Initalize return vectors.
+% Initialize return vectors.
 C=zeros(1,n);
 U=zeros(1,n+1);
 

@@ -1,13 +1,13 @@
-% erpimage() - Plot a colored image of a collection of single-trial data epochs, optionally
+% ERPIMAGE - Plot a colored image of a collection of single-trial data epochs, optionally
 %              sorted on and/or aligned to an input sorting variable and smoothed across
 %              trials with a Gaussian weighted moving-average. (To return event-aligned data
-%              without plotting, use eegalign()).  Optionally sort trials on value, amplitude
+%              without plotting, use EEGALIGN).  Optionally sort trials on value, amplitude
 %              or phase within a specified latency window. Optionally plot the ERP mean
 %              and std. dev.and moving-window spectral amplitude and inter-trial coherence
 %              at aselected or peak frequency. Optionally 'time warp' the single trial
 %              time-domain (potential) or power data to align the plotted data to a series
 %              of events with varying latencies that occur in each trial. Click on
-%              individual figures parts to examine them separately and zoom (using axcopy()).
+%              individual figures parts to examine them separately and zoom (using AXCOPY).
 % Usage:
 %            >> figure; erpimage(data,[],times); % image trials as colored lines in input order
 %
@@ -280,8 +280,8 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 % THE POSSIBILITY OF SUCH DAMAGE.
 
-% Uses external toolbox functions: phasecoher(), rmbase(), cbar(), movav()
-% Uses included functions:         plot1trace(), phasedet()
+% Uses external toolbox functions: PHASECOHER, RMBASE, CBAR, MOVAV
+% Uses included functions:         PLOT1TRACE, PHASEDET
 
 % UNIMPLEMENTED - 'allcohers',[data2] -> image the coherences at each latency & epoch.
 %                 Requires arg 'coher' with alpha significance.
@@ -319,7 +319,7 @@ ZEROWIDTH = 3.0;    % Linewidth of vertical 0 line
 VERTWIDTH = 2.5;    % Linewidth of optional vertical lines
 HORZWIDTH = 2.1;    % Linewidth of optional vertical lines
 SIGNIFWIDTH = 1.9;  % Linewidth of red significance lines for amp, coher
-DOTSTYLE   = 'k--'; % line style to use for vetical dotted/dashed lines
+DOTSTYLE   = 'k--'; % line style to use for vertical dotted/dashed lines
 LINESTYLE = '-';    % solid line
 LABELFONT = 10;     % font sizes for axis labels, tick labels
 TICKFONT  = 10;
@@ -505,7 +505,7 @@ if length(times) ~= frames
     return
 end
 
-if decfactor == 0,
+if decfactor == 0
     decfactor = DEFAULT_DECFACTOR;
 elseif decfactor > ntrials
     fprintf('Setting variable decfactor to max %d.\n',ntrials)
@@ -538,7 +538,7 @@ if nargin > 6
         elseif timestretchflag == YES % Added -JH
             timeStretchMarks = Arg{1};
             timeStretchMarks = round(1+(timeStretchMarks-times(1))*srate/1000); % convert from ms to frames -sm
-            [smc smr] = find(diff(timeStretchMarks') < 0);
+            [smc, smr] = find(diff(timeStretchMarks') < 0);
             if ~isempty(smr)
                 fprintf('\nerpimage(): Timewarp event latencies not in ascending order in trial %d.\n',smr)
                 return
@@ -586,7 +586,7 @@ if nargin > 6
             end
             Coherflag = NO;
             Erpflag = YES;  % plot amp, coher below erp time series
-        elseif Topoflag == YES;
+        elseif Topoflag == YES
             if length(Arg) < 2
                 help erpimage
                 fprintf('\nerpimage(): topo arg must be a list of length 2 or 3.\n');
@@ -598,7 +598,7 @@ if nargin > 6
             else                eloc_info = [];
             end
             Topoflag = NO;
-        elseif Specflag == YES;
+        elseif Specflag == YES
             if length(Arg) ~= 2 
                 error('\nerpimage(): ''spec'' flag argument must be a numeric array of length 2.\n');
                 return
@@ -606,7 +606,7 @@ if nargin > 6
             lospecHz = Arg(1);
             hispecHz = Arg(2);
             Specflag = NO;
-        elseif SpecAxisflag == YES;
+        elseif SpecAxisflag == YES
             SpecAxis = Arg;
             if ~strcmpi(SpecAxis,'lin') && ~strcmpi(SpecAxis,'log')
               error('\nerpimage(): spectrum axis type must be ''lin'' or ''log''.\n');
@@ -694,7 +694,7 @@ if nargin > 6
         elseif Cycleflag == YES
             cycles = Arg;
             Cycleflag = NO;
-        elseif Auxvarflag == YES;
+        elseif Auxvarflag == YES
             if isa(Arg,'cell')==YES && length(Arg)==2
                 auxvar = Arg{1};
                 auxcolors = Arg{2};
@@ -851,7 +851,7 @@ if nargin > 6
             % -----------------------------------------------------------------------
             % -----------------------------------------------------------------------
         elseif strcmpi(Arg,'avg_type')
-            if a < nargin,
+            if a < nargin
                 a=a+1;
                 Arg = eval(['arg' int2str(a-6)]);
                 if strcmpi(Arg, 'Gaussian'), mvavg_type='gaussian';
@@ -863,35 +863,42 @@ if nargin > 6
             end
         elseif strcmp(Arg,'nosort')
             Nosort = YES;
-            if a < nargin,
+            if a < nargin
                 Arg = eval(['arg' int2str(a+1-6)]);
-                if strcmpi(Arg, 'on'),     Nosort = YES; a = a+1;
-                elseif strcmpi(Arg, 'off') Nosort = NO;  a = a+1;
+                if strcmpi(Arg, 'on')
+                    Nosort = YES;
+                    a = a + 1;
+                elseif strcmpi(Arg, 'off')
+                    Nosort = NO;
+                    a = a + 1;
                 end
             end
         elseif strcmp(Arg,'showwin')
             Showwin = YES;
-            if a < nargin,
+            if a < nargin
                 Arg = eval(['arg' int2str(a+1-6)]);
-                if strcmpi(Arg, 'on'),     Showwin = YES; a = a+1;
-                elseif strcmpi(Arg, 'off') Showwin = NO;  a = a+1;
+                if strcmpi(Arg, 'on') 
+                    Showwin = YES; a = a+1;
+                elseif strcmpi(Arg, 'off') 
+                    Showwin = NO;  a = a+1;
                 end
             end
         elseif strcmp(Arg,'noplot') % elseif strcmp(Arg,'NoShow') % by Luca && Ramon
             NoShow = YES;
-            if a < nargin,
+            if a < nargin
                 Arg = eval(['arg' int2str(a+1-6)]);
                 if strcmpi(Arg, 'on'),     NoShow = YES; a = a+1;
                 elseif strcmpi(Arg, 'off'), NoShow = NO;  a = a+1;
                 end
             end
         elseif strcmpi(Arg,'replace_ties')
-            if a < nargin,
+            if a < nargin
                 a = a+1;
                 temp = eval(['arg' int2str(a-6)]);
-                if strcmpi(temp,'on'),
+                if strcmpi(temp,'on')
                     replace_ties = YES;
-                elseif strcmpi(temp,'off') replace_ties = NO;
+                elseif strcmpi(temp,'off') 
+                    replace_ties = NO;
                 else
                     error('\nerpimage(): Argument ''replace_ties'' needs to be followed by the string ''on'' or ''off''.');
                 end
@@ -899,7 +906,7 @@ if nargin > 6
                 error('\nerpimage(): Argument ''replace_ties'' needs to be followed by the string ''on'' or ''off''.');
             end
         elseif strcmpi(Arg,'sortvar_limits')
-            if a < nargin,
+            if a < nargin
                 a = a+1;
                 sortvar_limits = eval(['arg' int2str(a-6)]);
                 if ischar(sortvar_limits) || length(sortvar_limits)~=2
@@ -911,54 +918,64 @@ if nargin > 6
         elseif strcmpi(Arg,'erp')
             Erpflag = YES;
             erp_ptiles=1;
-            if a < nargin,
+            if a < nargin
                 Arg = eval(['arg' int2str(a+1-6)]);
-                if strcmpi(Arg, 'on'),     Erpflag = YES; erp_ptiles=1; a = a+1;
-                elseif strcmpi(Arg, 'off') Erpflag = NO;  a = a+1;
-                elseif strcmpi(Arg,'1') || (Arg(1)==1) Erplag = YES; erp_ptiles=1; a=a+1;
-                elseif strcmpi(Arg,'2') || (Arg(1)==2) Erplag = YES; erp_ptiles=2; a=a+1;
-                elseif strcmpi(Arg,'3') || (Arg(1)==3) Erplag = YES; erp_ptiles=3; a=a+1;
-                elseif strcmpi(Arg,'4') || (Arg(1)==4) Erplag = YES; erp_ptiles=4; a=a+1;
+                if strcmpi(Arg, 'on'),      Erpflag = YES; erp_ptiles=1; a = a+1;
+                elseif strcmpi(Arg, 'off'), Erpflag = NO;  a = a+1;
+                elseif strcmpi(Arg,'1') || (Arg(1)==1), Erplag = YES; erp_ptiles=1; a=a+1;
+                elseif strcmpi(Arg,'2') || (Arg(1)==2), Erplag = YES; erp_ptiles=2; a=a+1;
+                elseif strcmpi(Arg,'3') || (Arg(1)==3), Erplag = YES; erp_ptiles=3; a=a+1;
+                elseif strcmpi(Arg,'4') || (Arg(1)==4), Erplag = YES; erp_ptiles=4; a=a+1;
                 end
             end
         elseif strcmpi(Arg,'rmerp')
             Rmerp = 'yes';
-            if a < nargin,
+            if a < nargin
                 Arg = eval(['arg' int2str(a+1-6)]);
-                if strcmpi(Arg, 'on'),     Rmerp = 'yes'; a = a+1;
-                elseif strcmpi(Arg, 'off') Rmerp = 'no';  a = a+1;
+                if strcmpi(Arg, 'on')   
+                    Rmerp = 'yes'; a = a+1;
+                elseif strcmpi(Arg, 'off') 
+                    Rmerp = 'no';  a = a+1;
                 end
             end
         elseif strcmp(Arg,'cbar') || strcmp(Arg,'colorbar')
             Colorbar = YES;
-            if a < nargin,
+            if a < nargin
                 Arg = eval(['arg' int2str(a+1-6)]);
-                if strcmpi(Arg, 'on'),     Colorbar = YES; a = a+1;
-                elseif strcmpi(Arg, 'off') Colorbar = NO;  a = a+1;
+                if strcmpi(Arg, 'on')   
+                    Colorbar = YES; a = a+1;
+                elseif strcmpi(Arg, 'off') 
+                    Colorbar = NO;  a = a+1;
                 end
             end
         elseif (strcmp(Arg,'allamps') || strcmp(Arg,'plotamps'))
             Allampsflag = YES;
-            if a < nargin,
+            if a < nargin
                 Arg = eval(['arg' int2str(a+1-6)]);
-                if strcmpi(Arg, 'on'),     Allampsflag = YES; a = a+1;
-                elseif strcmpi(Arg, 'off') Allampsflag = NO;  a = a+1;
+                if strcmpi(Arg, 'on')
+                    Allampsflag = YES; a = a+1;
+                elseif strcmpi(Arg, 'off') 
+                    Allampsflag = NO;  a = a+1;
                 end
             end
         elseif strcmpi(Arg,'erpstd')
             Erpstdflag = YES;
-            if a < nargin,
+            if a < nargin
                 Arg = eval(['arg' int2str(a+1-6)]);
-                if strcmpi(Arg, 'on'),     Erpstdflag = YES; a = a+1;
-                elseif strcmpi(Arg, 'off') Erpstdflag = NO;  a = a+1;
+                if strcmpi(Arg, 'on')
+                    Erpstdflag = YES; a = a+1;
+                elseif strcmpi(Arg, 'off') 
+                    Erpstdflag = NO;  a = a+1;
                 end
             end
         elseif strcmp(Arg,'noxlabel') || strcmp(Arg,'noxlabels') || strcmp(Arg,'nox')
             NoTimeflag = YES;
-            if a < nargin,
+            if a < nargin
                 Arg = eval(['arg' int2str(a+1-6)]);
-                if strcmpi(Arg, 'on'),     NoTimeflag = YES; a = a+1;
-                elseif strcmpi(Arg, 'off') NoTimeflag = NO;  a = a+1;
+                if strcmpi(Arg, 'on')
+                    NoTimeflag = YES; a = a+1;
+                elseif strcmpi(Arg, 'off') 
+                    NoTimeflag = NO;  a = a+1;
                 end
             end
         elseif strcmp(Arg,'plotmode')
@@ -1010,14 +1027,14 @@ if nargin > 6
         elseif strcmpi(Arg,'erp_grid')
             erp_grid = YES;
         elseif strcmpi(Arg,'baseline')
-            if a < nargin,
+            if a < nargin
                 a = a+1;
                 baseline = eval(['arg' int2str(a-6)]);
             else
                 error('\nerpimage(): Argument ''baseline'' needs to be followed by a two element vector.');
             end
         elseif strcmpi(Arg,'baselinedb')
-            if a < nargin,
+            if a < nargin
                 a = a+1;
                 baselinedb = eval(['arg' int2str(a-6)]);
                 if length(baselinedb) > 2, error('''baselinedb'' need to be a 2 argument vector'); end
@@ -1025,35 +1042,35 @@ if nargin > 6
                 error('\nerpimage(): Argument ''baselinedb'' needs to be followed by a two element vector.');
             end
         elseif strcmpi(Arg,'filt')
-            if a < nargin,
+            if a < nargin
                 a = a+1;
                 flt = eval(['arg' int2str(a-6)]);
             else
                 error('\nerpimage(): Argument ''filt'' needs to be followed by a two element vector.');
             end
         elseif strcmpi(Arg,'erp_vltg_ticks')
-            if a < nargin,
+            if a < nargin
                 a = a+1;
                 erp_vltg_ticks=eval(['arg' int2str(a-6)]);
             else
                 error('\nerpimage(): Argument ''erp_vltg_ticks'' needs to be followed by a vector.');
             end
         elseif strcmpi(Arg,'img_trialax_label')
-            if a < nargin,
+            if a < nargin
                 a = a+1;
                 img_ylab = eval(['arg' int2str(a-6)]);
             else
                 error('\nerpimage(): Argument ''img_trialax_label'' needs to be followed by a string.');
             end
         elseif strcmpi(Arg,'img_trialax_ticks')
-            if a < nargin,
+            if a < nargin
                 a = a+1;
                 img_ytick_lab = eval(['arg' int2str(a-6)]);
             else
                 error('\nerpimage(): Argument ''img_trialax_ticks'' needs to be followed by a vector of values at which tick marks will appear.');
             end
         elseif strcmpi(Arg,'cbar_title')
-            if a < nargin,
+            if a < nargin
                 a = a+1;
                 cbar_title = eval(['arg' int2str(a-6)]);
             else
@@ -1143,7 +1160,7 @@ if ~isempty(auxvar)
 elseif exist('timeStretchRef') && ~isempty(timeStretchRef)
     if ~isnan(aligntime)
         fprintf(['\nerpimage(): options "align" and ' ...
-            '"timewarp" are not compatiable.\n']);
+            '"timewarp" are not compatible.\n']);
         return;
     end
     
@@ -2047,7 +2064,7 @@ if ~isempty(i)
 end
 
 %
-%% %%%%%%%%%%% Determine coherence freqeuncy %%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%% Determine coherence frequency %%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 if length(coherfreq) == 2 && coherfreq(1) ~= coherfreq(2) && freq <= 0
     % find max frequency in specified band - should use Matlab pwelch()?
@@ -2080,11 +2097,12 @@ if ~Allampsflag && ~exist('data2') %%%%%%%% Plot ERP image %%%%%%%%%%
     if strcmpi(NoShow, 'no')
         if TIMEX
             h_eim=imagesc(times,outtrials,data',[mindat,maxdat]);% plot time on x-axis
-            set(gca,'Ydir','normal');
+            set(gca,'Ydir','normal', 'tag', 'erpimage');
             axis([timelimits(1) timelimits(2) ...
                 min(outtrials) max(outtrials)]);
         else
             h_eim=imagesc(outtrials,times,data,[mindat,maxdat]); % plot trials on x-axis
+            set(gca, 'tag', 'erpimage');
             axis([min(outtrials) max(outtrials)...
                 timelimits(1) timelimits(2)]);
         end
@@ -3389,7 +3407,7 @@ if nargout<1
 end
 
 %
-%% %%%%%%%%%%%%% Plot a topoplot() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%% Plot a TOPOPLOT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 if (~isempty(topomap)) && strcmpi(NoShow, 'no')
     h(12)=axes('Position',...
@@ -3482,7 +3500,7 @@ limits = [min(times) max(times) minerp maxerp minamp maxamp mincoh maxcoh];
 limits = [limits baseamp coherfreq];  % add coherfreq to output limits array
 
 %
-%% %%%%%%%%%%%%% turn on axcopy() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%% turn on AXCOPY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 if strcmpi(NoShow, 'no')
     axcopy(gcf);
@@ -3499,7 +3517,7 @@ end
 fprintf('Done.\n\n');
 
 %
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%  End erpimage() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%  End ERPIMAGE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 if strcmpi(NoShow, 'no')
     axes('position',gcapos);
@@ -3509,7 +3527,7 @@ warning on;
 
 return
 %
-%% %%%%%%%%%%%%%%%%% function plot1trace() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%% function PLOT1TRACE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 function [plot_handle] = plot1trace(ax,times,trace,axlimits,signif,stdev,winlocs,erp_grid,erp_vltg_ticks)
 %function [plot_handle] = plot1trace(ax,times,trace,axlimits,signif,stdev,winlocs,erp_grid,erp_vltg_ticks)
@@ -3633,9 +3651,9 @@ set(gca,'children',kids');
 plot_handle=[plot_handle l1 l2];
 
 %
-%% %%%%%%%%%%%%%%%%% function phasedet() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%% function PHASEDET %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% phasedet() - function used in erpimage.m
+% PHASEDET - function used in erpimage.m
 %              Constructs a complex filter at frequency freq
 %
 function [ang,amp,win] = phasedet(data,frames,srate,nwin,freq)
@@ -3663,7 +3681,7 @@ ang = angle(resp);
 amp = abs(resp);
 
 %
-%% %%%%%%%%%%%% function prctle() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%% function PRCTLE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 function prctl = prctle(data,pc); % return percentile of a distribution
 [prows pcols] = size(pc);
@@ -3688,9 +3706,9 @@ pt = [0 100*((1:i)-0.5)./i 100];
 sortdata = [min(data); sortdata; max(data)];
 prctl = interp1(pt,sortdata,pc);
 %
-%% %%%%%%%%%%%%%%%%%%%%% function nan_mean() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%% function NAN_MEAN %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% nan_mean() - Take the column means of a matrix, ignoring NaN values.
+% NAN_MEAN - Take the column means of a matrix, ignoring NaN values.
 %              Return significance bounds if alpha (0 < alpha< <1) is given.
 %
 function [out, outalpha]  = nan_mean(in,alpha)
@@ -3728,7 +3746,7 @@ if nargin>1
 end
 out(nononnans) = NaN;
 %
-%% %%%%%%%%%%%%%%%%%%%%% function nan_std() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%% function NAN_STD %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 function out = nan_std(in)
 
@@ -3754,7 +3772,7 @@ else
     w = [w; w(end-1:-1:1)];
 end
 %
-%% %%%%%%%%%%%%%%%%%%%%% function compute_percentile() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%% function COMPUTE_PERCENTILE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 function outpercent = compute_percentile(sortvar, percent, outtrials, winsize);
 ntrials = length(sortvar);
@@ -3769,7 +3787,7 @@ for index = 1:length(outtrials)
 end
 
 %
-%% %%%%%%%%%%%%%%%%%%%%% function orderofmag() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%% function ORDEROFMAG %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 function ord=orderofmag(val)
 %function ord=orderofmag(val)
@@ -3799,7 +3817,7 @@ else
 end
 
 %
-%% %%%%%%%%%%%%%%%%%%%%% function find_crspnd_pt() %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%% function FIND_CRSPND_PT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 function y_pt=find_crspnd_pt(targ,vals,outtrials)
 %function id=find_crspnd_pt(targ,vals,outtrials)

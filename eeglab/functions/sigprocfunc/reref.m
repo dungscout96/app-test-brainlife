@@ -1,4 +1,4 @@
-% reref() - convert common reference EEG data to some other common reference
+% REREF - convert common reference EEG data to some other common reference
 %           or to average reference
 % Usage:
 %   >> Dataout = reref(data);  % convert all channels to average reference
@@ -48,7 +48,7 @@
 %
 % ICA inputs:
 % These inputs are still accepted but not the ICA conversion is now
-% performed from within pop_reref()
+% performed from within POP_REREF
 %   'icaweights' - ICA weight matrix. Note: If this is ICA weights*sphere, 
 %                  then the 'icasphere' input below should be [] or identity.
 %   'icasphere'  - ICA sphere matrix (if any)
@@ -70,7 +70,7 @@
 %           Now, Sout = eye(length(ICAinds));
 %           The re-referenced ICA component maps are now the 
 %           columns of inv(Wout), and the icasphere matrix, Sout, 
-%           is an identity matrix. Note: inv() -> pinv() when 
+%           is an identity matrix. Note: INV -> PINV when 
 %           PCA dimension reduction is used during ICA decomposition.
 
 % Copyright (C) 1999 Scott Makeig, SCCN/INC/UCSD, scott@sccn.ucsd.edu
@@ -121,8 +121,8 @@ g = finputcheck(varargin, { 'icaweight'   'real'    []          [];
                             'icachansind' 'integer'    []       [];
                             'interpchan'  {''}      []          [];
                             'method'     'string'  { 'standard','withref' }  'standard';
-                            'refstate'   { 'string','integer' } { { 'common','averef' } [1 size(data,1)] }     'common'; % ot used but kept for backward compatib.
-                            'exclude'    'integer' [1 size(data,1)]          [];
+                            'refstate', {'string', 'integer'}, {{'common', 'averef'}, [1 size(data,1)]}, 'common';
+                            'exclude',  'integer', [1 size(data,1)], [];
                             'refloc'     { 'cell','struct' }  { [] [] }   {};
                             'keepref'    'string'  {'on','off' }             'off';
                             'elocs'      {'integer','struct'}  []            [] });
@@ -131,8 +131,8 @@ if ~isempty(g.icaweight)
     g.icaweights = g.icaweight;
 end
 if ~isempty(g.icaweights)
-    if isempty(g.icachansind), 
-        g.icachansind = [1:size(g.icaweights,2)]; 
+    if isempty(g.icachansind)
+        g.icachansind = 1:size(g.icaweights,2); 
         disp('Warning: reref() output has changed slightly since EEGLAB 5.02');
         disp('         the 4th output argument is the indices of channels used for ICA instead');
         disp('         of the mean reference value (which is now output argument 5)');
@@ -146,7 +146,7 @@ if ~isempty(ref)
     end
 end
 
-[dim1 dim2 dim3] = size(data);
+[dim1, dim2, dim3] = size(data);
 data = reshape(data, dim1, dim2*dim3);
 
 % single reference not present in the data

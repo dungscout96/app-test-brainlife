@@ -1,4 +1,4 @@
-% eeg_getdatact() - get EEG data from a specified dataset or
+% EEG_GETDATACT - get EEG data from a specified dataset or
 %                  component activity
 %
 % Usage:
@@ -29,7 +29,7 @@
 %
 % Author: Arnaud Delorme, SCCN & CERCO, CNRS, 2008-
 %
-% See also: eeg_checkset()
+% See also: EEG_CHECKSET
 
 % Copyright (C) 15 Feb 2002 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -66,8 +66,8 @@ if nargin < 1
     return;
 end
 
-% reading data from several datasets and concatening it
-% -----------------------------------------------------
+% reading data from several datasets and concatenating it
+% -------------------------------------------------------
 if iscell(EEG) || (~ischar(EEG) && length(EEG) > 1)
     % decode some arguments
     % ---------------------
@@ -97,7 +97,8 @@ if iscell(EEG) || (~ischar(EEG) && length(EEG) > 1)
             data       = tmpdata;
             boundaries = datboundaries;
         else
-            if size(tmpdata,3) == 1 && size(data,2) ~= size(tmpdata,2) % continuous data (if same number of data points, consider 1 trial dataset)
+            if (isstruct(EEG) && all([EEG.trials] == 1)) || size(tmpdata,3) == 1 || size(data,2) ~= size(tmpdata,2) % continuous data (if same number of data points, consider 1 trial dataset)
+                if size(tmpdata,3) ~= 1 || size(data,3) ~= 1, error('Trying to concatenate continuous and epoched datasets'); end
                 if size(data,1) ~= size(tmpdata,1), error('Datasets to be concatenated do not have the same number of channels'); end
 
                 % adding boundaries
@@ -136,8 +137,11 @@ opt = finputcheck(varargin, { ...
 
 if ischar(opt), error(opt); end
 channelNotDefined = 0;
-if isempty(opt.channel), opt.channel = [1:EEG.nbchan]; channelNotDefined = 1;
-elseif isequal(opt.channel, [1:EEG.nbchan]) && ~isempty(opt.interp) channelNotDefined = 1;
+if isempty(opt.channel)
+    opt.channel = [1:EEG.nbchan]; 
+    channelNotDefined = 1;
+elseif isequal(opt.channel, [1:EEG.nbchan]) && ~isempty(opt.interp)
+    channelNotDefined = 1;
 end
 if iscell( opt.trialindices), opt.trialindices = opt.trialindices{1}; end
 if isempty(opt.trialindices), opt.trialindices = [1:EEG.trials]; end
@@ -147,7 +151,8 @@ if (~isempty(opt.rmcomps) || ~isempty(opt.component)) && isempty(EEG.icaweights)
 end
 
 if strcmpi(EEG.data, 'in set file')
-    EEG = pop_loadset('filename', EEG.filename, 'filepath', EEG.filepath, 'verbose', 'off');
+    EEGTMP = pop_loadset('filename', EEG.filename, 'filepath', EEG.filepath, 'verbose', 'off');
+    EEG.data = EEGTMP.data;
 end
 
 % get data boundaries if continuous data
@@ -198,16 +203,22 @@ else
     
         data = EEG.data;
     
-    else % channel but no data loaded
-
+    else % channel but no data loaded string
+        
+        [~,EEG.data,ext] = fileparts(EEG.data); % remove path if present
+        EEG.data = [ EEG.data ext];
         filename = fullfile(EEG.filepath, EEG.data);
         fid = fopen( filename, 'r', 'ieee-le'); %little endian (see also pop_saveset)
         if fid == -1
             filename = fullfile(EEG.data);
             fid = fopen( filename, 'r', 'ieee-le'); %little endian (see also pop_saveset)
             if fid == -1
-                error( ['file ' filename ' not found. If you have renamed/moved' 10 ...
-                    'the .set file, you must also rename/move the associated data file.' ]);
+                filename = fullfile(EEG.filepath, [EEG.filename(1:end-3) 'fdt' ]);
+                fid = fopen( filename, 'r', 'ieee-le'); %little endian (see also pop_saveset)
+                if fid == -1
+                    error( ['file ' filename ' not found. If you have renamed/moved' 10 ...
+                        'the .set file, you must also rename/move the associated data file.' ]);
+                end
             end
         end
         if strcmpi(opt.verbose, 'on')
@@ -251,8 +262,8 @@ else
         
     end
     
-    % subracting components from data
-    % -------------------------------
+    % subtracting components from data
+    % --------------------------------
     if ~isempty(opt.rmcomps)
         if strcmpi(opt.verbose, 'on')
             fprintf('Removing %d artifactual components\n', length(opt.rmcomps));

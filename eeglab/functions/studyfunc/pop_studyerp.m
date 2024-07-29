@@ -1,4 +1,4 @@
-% pop_studyerp() - create a simple design for ERP analysis
+% POP_STUDYERP - create a simple design for ERP analysis
 %
 % Usage:
 %       >> [STUDY ALLEEG] = pop_studyerp; % pop up interface
@@ -9,7 +9,7 @@
 %
 % Author: Arnaud Delorme, SCCN, UCSD, 2011-
 %
-% See also: eeg_checkset()
+% See also: EEG_CHECKSET
 
 % Copyright (C) 15 Feb 2002 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -38,7 +38,7 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 % THE POSSIBILITY OF SUCH DAMAGE.
 
-function [STUDY ALLEEG com ] = pop_studyerp;
+function [STUDY, ALLEEG, com ] = pop_studyerp()
 
 % first GUI, get the number of conditions and subjects
 % ----------------------------------------------------
@@ -180,13 +180,13 @@ if exist(fullfile(ALLEEG(1).filepath, [ALLEEG(1).filename(1:end-4) '.daterp' ]))
                 'datasets or set a different ERP baseline using menu item STUDY > Precompute channel measures).' ];
     res = questdlg2(textmsg, 'Precomputed datafiles already present on disk', 'No', 'Yes', 'Yes');
     if strcmpi(res, 'No')
-        error('User aborded precomputing ERPs');
+        error('User aborted precomputing ERPs');
     end;    
 end;    
 
 % call std_precomp for ERP (channels)
 % -----------------------------------
-com2 = '[STUDY ALLEEG] = std_precomp(STUDY, ALLEEG, ''channels'', ''interpolate'', ''on'', ''recompute'',''on'',''erp'',''on'');';
+com2 = '[STUDY ALLEEG] = std_precomp(STUDY, ALLEEG, ''channels'', ''interp'', ''on'', ''recompute'',''on'',''erp'',''on'');';
 [STUDY ALLEEG] = std_precomp(STUDY, ALLEEG, 'channels','interp', 'on', 'recompute','on','erp','on');
 
 % call std_erpplot to plot ERPs (channels)

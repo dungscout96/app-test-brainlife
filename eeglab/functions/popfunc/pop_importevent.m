@@ -1,4 +1,4 @@
-% pop_importevent() - Import events into an EEG dataset. If the EEG dataset
+% POP_IMPORTEVENT - Import events into an EEG dataset. If the EEG dataset
 %              is the only input, a window pops up to ask for the relevant 
 %              parameter values.
 %
@@ -9,8 +9,9 @@
 %   "Event indices" - [edit box] Enter indices of events to modify. 
 %               Leave this field blank to import new events. 
 %               Command line equivalent: 'indices'.
-%   "Append events?" - [checkbox] Check this checkbox to clear prior
-%               event information. In addition, see the "Align event latencies ..."
+%   "Append events?" - [checkbox] Check this box to append events to the current 
+%               events instead of erasing the previous events (default).
+%               In addition, see the "Align event latencies ..."
 %               edit box. Command line equivalent: 'append'.
 %   "Event file or array" - [edit box] Enter event file name. Use "Browse" 
 %               button to browse for a file. If a file with the given name
@@ -19,7 +20,7 @@
 %               Command line equivalent: 'filename'.
 %   "Input field (column) name" - [edit box] Enter a name for each of the
 %               columns in the event text file. If column names are defined 
-%               in the text file, they cannnot be used and you must copy 
+%               in the text file, they cannot be used and you must copy 
 %               the names into this edit box (and skip the name row). Must
 %               provide a name for each column. The keywords "type",
 %               "latency", and "duration" are recognized EEGLAB keywords and 
@@ -48,7 +49,7 @@
 %               automatically adjusts the sampling rate of the new events so
 %               they best align with the closest old events. This may account
 %               for small differences in sampling rate that could lead to 
-%               big differences at the end of the experiement (e.g., A 0.01%
+%               big differences at the end of the experiment (e.g., A 0.01%
 %               clock difference over an hour would lead to a 360-ms difference 
 %               if not corrected). Command line line equivalent is 'optimalim'.
 % Input:
@@ -57,13 +58,13 @@
 % Optional file or array input:
 %  'event'    - [ 'filename'|array ] Filename of a text file, or name of s
 %               Matlab array in the global workspace containing an
-%               array of events in the folowing format: The first column
+%               array of events in the following format: The first column
 %               is the type of the event, the second the latency. 
 %               The others are user-defined. The function can read 
 %               either numeric or text entries in ascii files.
 %  'fields'   - [Cell array] List of the name of each user-defined column, 
 %               optionally followed by a description. Ex: { 'type', 'latency' }
-%  'skipline' - [Interger] Number of header rows to skip in the text file 
+%  'skipline' - [Integer] Number of header rows to skip in the text file 
 %  'timeunit' - [ latency unit rel. to seconds ]. Default unit is 1 = seconds. 
 %  'delim'    - [string] String of delimiting characters in the input file. 
 %               Default is tab|space.
@@ -93,7 +94,7 @@
 %
 % Author: Arnaud Delorme & Scott Makeig, CNL / Salk Institute, 9 Feb 2002
 %
-% See also: importevent(), pop_editeventfield(), pop_selectevent()
+% See also: IMPORTEVENT, POP_EDITEVENTFIELD, POP_SELECTEVENT
 
 % Copyright (C) Arnaud Delorme, CNL / Salk Institute, 9 Feb 2002, arno@salk.edu
 %
@@ -128,11 +129,11 @@ com ='';
 if nargin < 1
    help pop_importevent;
    return;
-end;	
+end
 
 if isempty(EEG.data)
    disp('pop_importevent(): error: cannot process empty dataset'); return;
-end;    
+end
 
 I = [];
 
@@ -166,9 +167,9 @@ if nargin<2
          { 'Style', 'text', 'string', 'Event file or array', 'horizontalalignment', 'right', 'fontweight', 'bold' }, ...
          { 'Style', 'pushbutton', 'string', 'Browse', 'callback', [ 'tagtest = ''globfile'';' commandload ] }, ...
          { 'Style', 'edit' } ...
-         { 'Style', 'checkbox', 'string', 'Yes/No', 'value', 0 }, ...
+         { 'Style', 'checkbox', 'string', '', 'value', 0 }, ...
          { 'Style', 'edit', 'string', '', 'horizontalalignment', 'left', 'tag',  'globfile' }, ...
-         { }, { 'Style', 'text', 'string', 'NB: No = overwrite', 'value', 0 }, { }, ...
+         { }, { 'Style', 'text', 'string', 'Unchecked = overwrite', 'value', 0 }, { }, ...
          { 'Style', 'text', 'string', 'Input field (column) names       ', 'fontweight', 'bold', 'tooltipstring', helpfields } ...
          { 'Style', 'edit', 'string', '' } { 'Style', 'text', 'string', 'Ex: type latency duration', 'tooltipstring', helpfields } };
          geometry = { geometry{:} [1.2 1 1] [1.2 1 1] [1.2 1 1] [1.2 0.2 1.8] };
@@ -183,14 +184,14 @@ if nargin<2
 					  { 'Style', 'checkbox', 'value' 1 } { },...
                };
         results = inputgui( geometry, uilist, 'pophelp(''pop_importevent'');', 'Import event info -- pop_importevent()' );
-        if length(results) == 0, return; end
+        if isempty(results), return; end
 
 	    % decode top inputs
 	    % -----------------
 	    args = {};
 	    if ~isempty( results{1} ), args = { args{:}, 'indices', eval( [ '[' results{1} ']' ]) }; end
 	    if results{2} == 0 && ~isempty(EEG.event), args = { args{:}, 'append', 'no' }; end
-	    if ~isempty( results{3} ), 
+	    if ~isempty( results{3} )
             if ischar( results{3} ) && ~exist(results{3})
                 args = { args{:}, 'event', evalin('base', results{3}) }; 
             else
@@ -215,17 +216,20 @@ if nargin<2
 else % no interactive inputs
     args = varargin;
     % scan args to modify array/file format
-    % array are transformed into string 
+    % array are transformed into string
     % files are transformed into string of string
-    % (this is usefull to build the string command for the function)
+    % (this is useful to build the string command for the function)
     % --------------------------------------------------------------
-    for index=1:2:length(args)
-        if iscell(args{index+1}), if iscell(args{index+1}{1}) args{index+1} = args{index+1}{1}; end; end; % double nested 
-        if ischar(args{index+1}) && length(args{index+1}) > 2 && args{index+1}(1) == '''' && args{index+1}(end) == ''''             
-            args{index+1} = args{index+1}(2:end-1); end
-        %else if ~isempty( inputname(index+2) ), args{index+1} = inputname(index+2); end
-        %end
-    end;                
+    for index = 1:2:length(args)
+        if iscell(args{index+1})
+            if iscell(args{index+1}{1})
+                args{index+1} = args{index+1}{1};
+            end
+        end
+        if ischar(args{index+1}) && length(args{index+1}) > 2 && args{index+1}(1) == '''' && args{index+1}(end) == ''''
+            args{index+1} = args{index+1}(2:end-1);
+        end
+    end
 end
 
 EEG.event = importevent( [], EEG.event, EEG.srate, args{:});

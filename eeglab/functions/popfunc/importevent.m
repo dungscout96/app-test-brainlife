@@ -1,4 +1,4 @@
-% importevent() - Import experimental events from data file or Matlab
+% IMPORTEVENT - Import experimental events from data file or Matlab
 %                 array into a structure.
 %
 % Usage: >> eventstruct = importevent( event, oldevent, srate);
@@ -7,7 +7,7 @@
 % Input:
 %   event     - [ 'filename'|array ] Filename of a text file, or name of
 %               Matlab array in the global workspace containing an
-%               array of events in the folowing format: The first column of
+%               array of events in the following format: The first column of
 %               the cell array is the type of the event, the second the latency. 
 %               The others are user-defined. The function can read 
 %               either numeric or text entries in ascii files.
@@ -21,7 +21,7 @@
 %  'fields'   - [Cell array] List of the name of each user-defined column, 
 %               optionally followed by a description. Ex: { 'type',
 %               'latency' }
-%  'skipline' - [Interger] Number of header rows to skip in the text file 
+%  'skipline' - [Integer] Number of header rows to skip in the text file 
 %  'timeunit' - [ latency unit rel. to seconds ]. Default unit is 1 = seconds. 
 %               NaN indicates that the latencies are given in time points.
 %  'delim'    - [string] String of delimiting characters in the input file. 
@@ -67,7 +67,7 @@
 %
 % Author: Arnaud Delorme & Scott Makeig, CNL / Salk Institute, 2004
 %
-% See also: pop_importevent()
+% See also: POP_IMPORTEVENT
 
 % Copyright (C) Arnaud Delorme, CNL / Salk Institute, 2004, arno@salk.edu
 %
@@ -103,7 +103,7 @@ function event = importevent(event, oldevent, srate, varargin)
 if nargin < 1
    help importevent;
    return;
-end;	
+end
 
 I = [];
 
@@ -190,7 +190,7 @@ end
 % ------------------------
 for curfield = tmpfields'
     if ~isempty(event), allfields = fieldnames(event);
-    else                    allfields = {}; end
+    else                allfields = {}; end
     switch lower(curfield{1})
         case {'append', 'fields', 'skipline', 'indices', 'timeunit', 'align', 'delim' }, ; % do nothing now
         case 'event', % load an ascii file
@@ -226,8 +226,15 @@ for curfield = tmpfields'
                       % match existing fields
                       % ---------------------
                       if ischar(g.event) && ~exist(g.event), g.event = evalin('caller', g.event); end
-                      tmparray = load_file_or_array( g.event, g.skipline, g.delim );
-                      if isempty(g.indices) g.indices = [1:size(tmparray,1)] + length(event); end
+
+                      if isstruct(g.event)
+                          g.fields = fieldnames(g.event);
+                          latencypresent = ~isempty(strmatch('latency', g.fields));
+                      end
+                      tmparray = load_file_or_array(g.event, g.skipline, g.delim);
+                      if isempty(g.indices)
+                          g.indices = [1:size(tmparray,1)] + length(event);
+                      end
                       if length(g.indices) ~= size(tmparray,1)
                           error('Set error: number of row in file does not match the number of event given as input'); 
                       end
@@ -240,7 +247,8 @@ for curfield = tmpfields'
                       % ---------------------
                       for eventfield = 1:size(tmparray,2)
                           event = setstruct( event, g.fields{eventfield}, g.indices, { tmparray{:,eventfield} });
-                      end;      
+                      end
+
 					  % generate ori fields
 					  % -------------------
                       offset = length(event)-size(tmparray,1);
@@ -256,12 +264,12 @@ for curfield = tmpfields'
       end
 end
 
-if isempty(event) % usefull 0xNB empty structure
+if isempty(event) % useful 0xNB empty structure
     event = [];
 end
 
-%% remove the events wit out-of-bound latencies
-% --------------------------------------------
+%% remove the events with out-of-bound latencies
+% ---------------------------------------------
 if isfield(event, 'latency') && latencypresent
     try 
         res = cellfun('isempty', { event.latency });
@@ -271,6 +279,7 @@ if isfield(event, 'latency') && latencypresent
                      length(res), length(event));
             event( res ) = [];
         end
+    catch
     end
 end
 
@@ -282,13 +291,16 @@ function array = load_file_or_array( varname, skipline, delim );
         array = loadtxt( varname, 'skipline', skipline, 'delim', delim );
         
     else 
-         if ~iscell(varname)
-             array = mattocell(varname);
-         else
+         if iscell(varname)
              array = varname;
+         elseif isstruct(varname)
+             tmparray = struct2table(varname);
+             array = table2cell(tmparray);
+         else
+             array = mattocell(varname);
          end
-    end;     
-return;
+    end
+return
 
 %% update latency values
 % ---------------------
@@ -296,7 +308,7 @@ function event = recomputelatency( event, indices, srate, timeunit, align, oldev
 
     % update time unit 
     % ----------------
-    if ~isfield(event, 'latency'), 
+    if ~isfield(event, 'latency')
         if isfield(event, 'duration')
             error('A duration field cannot be defined if a latency field has not been defined');
         end

@@ -1,5 +1,6 @@
-load_eeglab();
-
+addpath('./eeglab');
+addpath('./dataqual');
+eeglab nogui;
 arg_list = argv();
 EEG = pop_loadset(arg_list{1});
 %addpath(pwd, 'iclabel');

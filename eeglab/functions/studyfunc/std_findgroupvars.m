@@ -1,4 +1,4 @@
-% std_findgroupvars() - find group vars in STUY structure
+% STD_FINDGROUPVARS - find group vars in STUY structure
 %
 % Usage:
 %   >>  
@@ -59,8 +59,10 @@ for iField = 1:length(fields)
     
     for iSubj = 1:length(subjVals)
         if ~isempty(subjVals{iSubj})
-            if ischar(subjVals{iSubj}{1}) subjVals{iSubj} = unique(subjVals{iSubj});
-            else                         subjVals{iSubj} = mattocell(unique([subjVals{iSubj}{:}]));
+            if ischar(subjVals{iSubj}{1})
+                subjVals{iSubj} = unique(subjVals{iSubj});
+            else                         
+                subjVals{iSubj} = mattocell(unique([subjVals{iSubj}{:}]));
             end
         end
     end

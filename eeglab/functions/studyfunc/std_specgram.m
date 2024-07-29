@@ -1,4 +1,4 @@
-% std_specgram() - Returns the ICA component or channel spectrogram for a dataset.
+% STD_SPECGRAM - Returns the ICA component or channel spectrogram for a dataset.
 %                  Saves the spectra in a file.
 % Usage:    
 %           >> [spec freqs] = std_specgram(EEG, 'key', 'val', ...);
@@ -36,7 +36,7 @@
 % Files output or overwritten for data: 
 %               [dataset_filename].datspecgram, 
 % 
-% See also  spectopo(), std_erp(), std_ersp(), std_map(), std_preclust()
+% See also  SPECTOPO, STD_ERP, STD_ERSP, STD_MAP, STD_PRECLUST
 %
 % Authors: Arnaud Delorme, SCCN, INC, UCSD, January, 2005
 
@@ -70,7 +70,7 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 % THE POSSIBILITY OF SUCH DAMAGE.
 
-% eeg_specgram() - Compute spectrogramme taking into account boundaries in
+% EEG_SPECGRAM - Compute spectrogramme taking into account boundaries in
 %                  the data.
 % Usage:
 %   >> EEGOUT = eeg_specgram( EEG, typeplot, num, 'key', 'val');
@@ -122,17 +122,17 @@ if nargin < 1
     return;
 end
 
-[opt moreopts] = finputcheck(varargin, { 'components' 'integer' []             [];
+[opt, moreopts] = finputcheck(varargin, { 'components' 'integer' []             [];
                                          'channels'   { 'cell','integer' }  { [] [] }     {}
                                          'recompute'  'string'  { 'on','off' } 'off';
-                                         'winsize'    'integer' []             3; % 3 seconds
-                                         'rmcomps'    'integer' []             [];
+                                         'winsize'    'integer'  []  3;
+                                         'rmcomps'    'integer'  []  [];
                                          'interp'     'struct'  { }            struct([]);
                                          'overlap'    'integer' []             0;  
                                          'plot'       'string'  { 'off','on' } 'off';
                                          'freqrange'  'real'    []             [];
                                          'timerange'  'real'    []             [];
-                                         'filter'     'real'    []             []}, ...    % 11 points
+                                         'filter'     'real'    []             []}, ...  
                                          'eeg_specgram', 'ignore');
 if ischar(opt), error(opt); end
 if isfield(EEG,'icaweights')

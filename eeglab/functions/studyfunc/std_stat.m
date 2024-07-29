@@ -1,4 +1,4 @@
-% std_stat() - compute statistics for ERP/spectral traces or ERSP/ITC images
+% STD_STAT - compute statistics for ERP/spectral traces or ERSP/ITC images
 %              of a component or channel cluster in a STUDY.
 % Usage:
 %          >> [pcond, pgroup, pinter, statscond, statsgroup, statsinter] = std_stat( data, 'key', 'val', ...)
@@ -23,8 +23,8 @@
 %                  {default: 'off'}
 %  'method'      - ['parametric'|'permutation'] Type of statistics to use
 %                  default is 'parametric'. 'perm' and 'param' legacy
-%                  abreviations are still functional.
-%  'naccu'       - [integer] Number of surrogate averages fo accumulate when
+%                  abbreviations are still functional.
+%  'naccu'       - [integer] Number of surrogate averages to accumulate when
 %                  computing permutation-based statistics. For example, to
 %                  test p<0.01 use naccu>=200; for p<0.001, use naccu>=2000.
 %                  If a non-NaN 'threshold' is set (see below) and 'naccu'
@@ -36,13 +36,14 @@
 %  'mcorrect'    - ['none'|'fdr'] apply correcting for multiple comparisons.
 %  'mode'        - ['eeglab'|'fieldtrip'] statistical framework to use. 
 %                  'eeglab' uses EEGLAB statistical functions and 'fieldtrip'
-%                  uses Fieldtrip statistical funcitons. Default is 'eeglab'.
+%                  uses Fieldtrip statistical functions. Default is 'eeglab'.
 %
 % Fieldtrip statistics options:
 %  'fieldtripnaccu'   - 'numrandomization' Fieldtrip parameter
 %  'fieldtripalpha'   - 'alpha' Fieldtrip parameter. Default is 0.05.
 %  'fieldtripmethod'  - 'method' Fieldtrip parameter. Default is 'analytic'
-%  'fieldtripmcorrect' - 'mcorrect' Fieldtrip parameter. Default is 'none'.
+%  'fieldtripmcorrect' - ['cluster'|'max'|'fdr'|'holms'|'bonferoni'|'none']. 
+%                        Default is 'none'.
 %  'fieldtripclusterparam' - string or cell array for optional parameters
 %                            for cluster correction method, see function
 %                            ft_statistics_montecarlo for more information.
@@ -68,7 +69,7 @@
 %
 % Author: Arnaud Delorme, CERCO, CNRS, 2006-
 %
-% See also: statcond()
+% See also: STATCOND
 
 % Copyright (C) Arnaud Delorme
 %
@@ -115,11 +116,12 @@ if ~isempty(varargin) && isstruct(varargin{1})
 else
     opt = [];
 end
-if ~isempty(varargin) ||isempty(opt);
+if ~isempty(varargin) ||isempty(opt)
     opt = pop_statparams(opt, varargin{:});
 end
 
 if ~isfield(opt, 'paired'), opt.paired = { 'off' 'off' }; end
+if isfield(opt, 'cluster'), error('Unknown parameter ''cluster'''); end
 if ~isnan(opt.eeglab.alpha(1)) && isempty(opt.eeglab.naccu), opt.eeglab.naccu = 1/opt.eeglab.alpha(end)*2; end
 if any(any(cellfun('size', data, 2)==1)), opt.groupstats = 'off'; opt.condstats = 'off'; end
 if strcmpi(opt.eeglab.mcorrect, 'fdr'), opt.eeglab.naccu = opt.eeglab.naccu*20; end
@@ -223,8 +225,8 @@ else
         % main statistics
         if ng > 1
             [F, df, pval] = statcondfieldtrip(newdata, 'paired', opt.paired{1}, params{:});
-            pinter{1}     = applymask(F, opt.fieldtrip);
-            statsinter{1} = squeeze(F.stat);
+            pinter{2}     = applymask(F, opt.fieldtrip);
+            statsinter{2} = squeeze(F.stat);
         end
     else
         pcond = {};
@@ -252,8 +254,8 @@ else
         % main statistics
         if nc > 1
             [F, df, pval] = statcondfieldtrip(newdata, 'paired', opt.paired{1}, params{:});
-            pinter{2}     = applymask(F, opt.fieldtrip);
-            statsinter{2} = squeeze(F.stat);
+            pinter{1}     = applymask(F, opt.fieldtrip);
+            statsinter{1} = squeeze(F.stat);
         end
     else
         pgroup = {};

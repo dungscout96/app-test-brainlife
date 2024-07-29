@@ -1,4 +1,4 @@
-% pop_expica() - export ICA weights or inverse matrix
+% POP_EXPICA - export ICA weights or inverse matrix
 %
 % Usage:
 %   >> pop_expica( EEG, whichica);             % a window pops up
@@ -13,7 +13,7 @@
 % 
 % Author: Arnaud Delorme, CNL / Salk Institute, Mai 14, 2003
 %
-% See also: pop_export()
+% See also: POP_EXPORT
 
 % Copyright (C) Mai 14, 2003, Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -63,7 +63,9 @@ if nargin < 3
 	[filename, filepath] = uiputfile('*.*', [ 'File name for ' ...
                         fastif(strcmpi(whichica, 'inv'), 'inverse', 'weight') ' matrix -- pop_expica()']); 
     drawnow;
-	if filename == 0 return; end
+	if filename == 0 
+        return; 
+    end
 	filename = [filepath filename];
 end
 

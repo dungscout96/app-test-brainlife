@@ -28,7 +28,7 @@
 
 % Copyright (C) 2001 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
-% This file is part of EEGLAB, see http://www.eeglab.org
+% This file is part of EEGLAB, see https://urldefense.com/v3/__http://www.eeglab.org__;!!Mih3wA!FEwHgHjctkJ2D0Ove-79slevEDsE1K2jouFDmdOkovvn1Kvf81VoHnoq4zw64tfGlyoLA0vXGN7Y$ 
 % for the documentation and details.
 %
 % Redistribution and use in source and binary forms, with or without
@@ -64,8 +64,11 @@ if nargin < 1
     % pop up window
     % -------------
 	[inputname, inputpath] = uigetfile2('*.SET*;*.set', 'Load dataset(s) -- pop_loadset()', 'multiselect', 'on');
+    
     drawnow;
-	if isequal(inputname, 0) return; end
+    if isequal(inputname, 0)
+        return;
+    end
     options = { 'filename' inputname 'filepath' inputpath };
 else
     % account for old calling format
@@ -132,11 +135,28 @@ else
                     TMPVAR = rmfield(TMPVAR, 'data');
                 end
             end
-            if isfield(TMPVAR, 'setname')
+            if isfield(TMPVAR, 'datfile') && ~isempty(TMPVAR.datfile)
+                if exist(TMPVAR.datfile, 'file')
+                    TMPVAR.data = TMPVAR.datfile;
+                else
+                    warning('.fdt file not found, checking if .set contains data')
+                    TMPVAR = load('-mat', filename);
+                    if ~isnumeric(TMPVAR.data) && ~isempty(TMPVAR.data) 
+                        warning('.fdt file not found, but data found in .set EEGLAB file')
+                        TMPVAR.data = 'in set file';
+                    else
+                        warning('.fdt file not found, this EEGLAB file is missing raw data')
+                    end
+                end
+            else
                 TMPVAR.data = 'in set file';
             end
         else
             TMPVAR = load('-mat', filename);
+            if isstruct(TMPVAR) && isfield(TMPVAR, 'data') && isequal(TMPVAR.data, 'in set file')
+                fprintf(2, 'Something is wrong with the data file, trying to use the associated .fdt file\n');
+                TMPVAR.data = TMPVAR.datfile;
+            end
         end
 
         % variable not found
@@ -220,6 +240,11 @@ end
 
 % load all data or specific data channel
 % --------------------------------------
+for iEEG = 1:length(EEG)
+    if isfield(EEG(iEEG), 'event') && ~isempty(EEG(iEEG).event) && isfield(EEG(iEEG).event, 'sample') && ~isfield(EEG(iEEG).event, 'latency')
+        [EEG(iEEG).event(1:length(EEG(iEEG).event)).latency] = deal(EEG(iEEG).event.sample);
+    end
+end
 if strcmpi(g.check, 'on')
     EEG = eeg_checkset(EEG);
 end

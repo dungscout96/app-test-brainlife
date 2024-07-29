@@ -1,9 +1,9 @@
-% pop_erpimparams() - Set plotting and statistics parameters for 
+% POP_ERPIMPARAMS - Set plotting and statistics parameters for 
 %                    computing and plotting STUDY mean ERPimages and measure 
 %                    statistics. Settings are stored within the STUDY 
 %                    structure (STUDY.etc.erpimparams) which is used
 %                    whenever plotting is performed by the function
-%                    std_erpimage().
+%                    STD_ERPIMAGE.
 % Usage:    
 %   >> STUDY = pop_erpimparams(STUDY, 'key', 'val', ...);   
 %
@@ -98,7 +98,11 @@ if isempty(varargin)
     if ~isequal(res.timerange ,  STUDY.etc.erpimparams.timerange),   options = { options{:} 'timerange'   res.timerange   }; end
     if ~isequal(res.colorlimits, STUDY.etc.erpimparams.colorlimits), options = { options{:} 'colorlimits' res.colorlimits }; end
     if isfield(res, 'multiplechan') 
-        if res.multiplechan == 1 res.multiplechan = 'off'; else res.multiplechan = 'on'; end
+        if res.multiplechan == 1
+            res.multiplechan = 'off';
+        else
+            res.multiplechan = 'on';
+        end
         if ~isequal(res.multiplechan, STUDY.etc.erpimparams.averagechan), options = { options{:} 'averagechan' res.multiplechan }; end
     end
     

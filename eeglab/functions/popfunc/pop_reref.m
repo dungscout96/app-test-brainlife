@@ -1,5 +1,5 @@
-% pop_reref() - Convert an EEG dataset to average reference or to a
-%               new common reference channel (or channels). Calls reref().
+% POP_REREF - Convert an EEG dataset to average reference or to a
+%               new common reference channel (or channels). Calls REREF.
 % Usage:
 %       >> EEGOUT = pop_reref( EEG ); % pop up interactive window
 %       >> EEGOUT = pop_reref( EEG, ref, 'key', 'val' ...);
@@ -51,11 +51,11 @@
 %   EEGOUT      - re-referenced output dataset
 %
 % Notes:
-%                 For other options, call reref() directly. See >> help reref
+%                 For other options, call REREF directly. See >> help reref
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 12 Nov 2002
 %
-% See also: reref(), eeglab()
+% See also: REREF, EEGLAB
 
 % Copyright (C) 2002 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -239,10 +239,12 @@ if ~isfield(g, 'enforcetype'),   g.enforcetype   = 0;     end
 interpflag = 0;
 if ~isequal('off', g.interpchan )
     
-    % Case no channel provided, infering them from urchanlocs field
+    % Case no channel provided, inferring them from urchanlocs field
     if isempty(g.interpchan) 
-        if isfield(EEG.chaninfo, 'removedchans')
-            chanlocs2interp = EEG.chaninfo.removedchans;
+        if isfield(EEG.chaninfo, 'nodatchans') && isfield(EEG.chaninfo.nodatchans, 'theta')
+            chanlocs2interp = EEG.chaninfo.nodatchans;
+            emptyChans = cellfun(@isempty, { chanlocs2interp.theta });
+            chanlocs2interp(emptyChans) = [];
             if ~isempty(chanlocs2interp)
                 interpflag = 1;
             end
@@ -282,7 +284,7 @@ if ~isequal('off', g.interpchan )
             else
                chan2interpindx = find(cell2mat(cellfun(@(x) ismember(x, chan2interp), {EEG.urchanlocs.labels}, 'UniformOutput', 0)));  
 
-               % Checking validity of channels selected for interpolation by assessing X ccordinate
+               % Checking validity of channels selected for interpolation by assessing X coordinate
                for ichan = 1:length(chan2interpindx)
                    validchan(ichan) = ~isempty(EEG.urchanlocs(chan2interpindx(ichan)).X);
                end
@@ -371,8 +373,8 @@ end
 % --------------------
 if isfield(EEG, 'ref')
     if strcmpi(EEG.ref, 'common') && isempty(ref)
-        EEG.ref = 'averef';
-    elseif strcmpi(EEG.ref, 'averef') && ~isempty(ref)
+        EEG.ref = 'average';
+    elseif strcmpi(EEG.ref, 'average') && ~isempty(ref)
         EEG.ref = 'common';
     end
 end
@@ -390,8 +392,8 @@ if ~isempty(EEG.icaweights)
         EEG.icaweights = [];
         EEG.icasphere  = [];
     elseif length(EEG.icachansind) ~= nchans - length(g.exclude)
-        disp('Error: some channels not used for ICA decomposition are used for rereferencing');
-        disp('       the ICA decomposition has been removed');
+        disp('Warning: some channels not used for ICA decomposition are used for rereferencing');
+        disp('         the ICA decomposition has been removed');
         EEG.icaweights = [];
         EEG.icasphere  = [];
     else
@@ -403,7 +405,7 @@ if ~isempty(EEG.icaweights)
         newICAchaninds = zeros(orinbchan, size(EEG.icawinv,2));
         newICAchaninds(EEG.icachansind,:) = EEG.icawinv;
         
-        [newICAchaninds newchanlocs] = reref(newICAchaninds, ref, optionscall{:});
+        [newICAchaninds, newchanlocs] = reref(newICAchaninds, ref, optionscall{:});
         
         % convert channel indices in icachanlocs (uses channel labels)
         % ------------------------------------------------------------
@@ -413,9 +415,12 @@ if ~isempty(EEG.icaweights)
             oldLabel    = orichanlocs(icachansind(i)).labels;
             newLabelPos = strmatch(oldLabel, { newchanlocs.labels }, 'exact');
             
+            if length(newLabelPos) > 1
+                warning('More than one match for specified reference channel; First one selected. This may cause erratic behavior. If the 2 channels are identical, delete one of them.');
+            end
             if ~isempty( newLabelPos )
-                icachansind(i) = newLabelPos;
-                rminds(find(icachansind(i) == rminds)) = [];
+                icachansind(i) = newLabelPos(1);
+                rminds(icachansind(i) == rminds) = [];
             else
                 icachansind(i) = [];
             end

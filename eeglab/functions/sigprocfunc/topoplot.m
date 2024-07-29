@@ -1,6 +1,6 @@
-% topoplot() - plot a topographic map of a scalp data field in a 2-D circular view 
+% TOPOPLOT - plot a topographic map of a scalp data field in a 2-D circular view 
 %              (looking down at the top of the head) using interpolation on a fine 
-%              cartesian grid. Can also show specified channnel location(s), or return 
+%              cartesian grid. Can also show specified channel location(s), or return 
 %              an interpolated value at an arbitrary scalp location (see 'noplot').
 %              By default, channel locations below head center (arc_length 0.5) are 
 %              shown in a 'skirt' outside the cartoon head (see 'plotrad' and 'headrad' 
@@ -81,6 +81,11 @@
 %   'emarker2'        - {markchans}|{markchans marker color size linewidth} cell array specifying 
 %                       an alternate marker for specified 'plotchans'. Ex: {[3 17],'s','g'} 
 %                       {default: none, or if {markchans} only are specified, then {markchans,'o','r',10,1}}
+%   'scatter'         - ['on'|'off'] use scatter3 function instead of plot3 function toplot the electrode location. This
+%                       helps with controlling over the individual size and color of the electrodes.
+%                       If on, you can use {markerchar color size linewidth} convention for emarker and/or emarker2,
+%                       but you can provide a 1byX vector for size and Xby3 vector for color to change.
+%                       {default : 'off'}  
 %   'hcolor'          - color of the cartoon head. Use 'hcolor','none' to plot no head. {default: 'k' = black}
 %   'shading'         - 'flat','interp'  {default: 'flat'}
 %   'numcontour'      - number of contour lines {default: 6}. You may also enter a vector to set contours 
@@ -96,14 +101,14 @@
 %   'circgrid'        - [int > 100] number of elements (angles) in head and border circles {201}
 %   'emarkercolor'    - cell array of colors for 'blank' option.
 %   'plotdisk'        - ['on'|'off'] plot disk instead of dots for electrodefor 'blank' option. Size of disk
-%                       is controled by input values at each electrode. If an imaginary value is provided, 
+%                       is controlled by input values at each electrode. If an imaginary value is provided, 
 %                       plot partial circle with red for the real value and blue for the imaginary one.
 %
 % Dipole plotting options:
 %   'dipole'          - [xi yi xe ye ze] plot dipole on the top of the scalp map
 %                       from coordinate (xi,yi) to coordinates (xe,ye,ze) (dipole head 
 %                       model has radius 1). If several rows, plot one dipole per row.
-%                       Coordinates returned by dipplot() may be used. Can accept
+%                       Coordinates returned by DIPPLOT may be used. Can accept
 %                       an EEG.dipfit.model structure (See >> help dipplot).
 %                       Ex: ,'dipole',EEG.dipfit.model(17) % Plot dipole(s) for comp. 17.
 %   'dipnorm'         - ['on'|'off'] normalize dipole length {default: 'on'}.
@@ -141,7 +146,7 @@
 % Authors: Andy Spydell, Colin Humphries, Arnaud Delorme & Scott Makeig
 %          CNL / Salk Institute, 8/1996-/10/2001; SCCN/INC/UCSD, Nov. 2001 -
 %
-% See also: timtopo(), envtopo()
+% See also: TIMTOPO, ENVTOPO
 
 % Deprecated options: 
 %           'shrink' - ['on'|'off'|'force'|factor] Deprecated. 'on' -> If max channel arc_length 
@@ -254,12 +259,13 @@ EMARKER2 = 'o';          % mark subset of electrode locations with small disks
 EMARKER2COLOR = 'r';     % mark subset of electrode locations with small disks
 EMARKERSIZE2 = 10;      % default selected channel location marker size
 EMARKER2LINEWIDTH = 1;
+SCATTER = 'off';        % plot the electrode locations using scatter plot.
 EFSIZE = get(0,'DefaultAxesFontSize'); % use current default fontsize for electrode labels
 HLINEWIDTH = 2;         % default linewidth for head, nose, ears
 BLANKINGRINGWIDTH = .035;% width of the blanking ring 
 HEADRINGWIDTH    = .007;% width of the cartoon head ring
 SHADING = 'flat';       % default 'shading': flat|interp
-shrinkfactor = [];      % shrink mode (dprecated)
+shrinkfactor = [];      % shrink mode (deprecated)
 intrad       = [];      % default interpolation square is to outermost electrode (<=1.0)
 plotrad      = [];      % plotting radius ([] = auto, based on outermost channel location)
 headrad      = [];      % default plotting radius for cartoon head is 0.5
@@ -267,7 +273,7 @@ squeezefac = 1.0;
 MINPLOTRAD = 0.15;      % can't make a topoplot with smaller plotrad (contours fail)
 VERBOSE = 'off';
 MASKSURF = 'off';
-CONVHULL = 'off';       % dont mask outside the electrodes convex hull
+CONVHULL = '';       % dont mask outside the electrodes convex hull
 DRAWAXIS = 'off';
 PLOTDISK = 'off';
 ContourVals = Values;
@@ -360,9 +366,22 @@ if nargs > 2
     if ~(round(nargs/2) == nargs/2)
         error('Odd number of input arguments??')
     end
-    for i = 1:2:length(varargin)
-        Param = varargin{i};
-        Value = varargin{i+1};
+
+    % check for chaninfo
+    options = varargin;
+    for i = 1:2:length(options)
+        if strcmpi(options{i}, 'chaninfo')
+            chaninfoTmp = options{i+1};
+            if isfield(chaninfoTmp, 'topoplot')
+                options = [ options chaninfoTmp.topoplot ];
+                break;
+            end
+        end
+    end
+
+    for i = 1:2:length(options)
+        Param = options{i};
+        Value = options{i+1};
         if ~ischar(Param)
             error('Flag arguments must be strings')
         end
@@ -378,8 +397,6 @@ if nargs > 2
                     error('Colormap must be a n x 3 matrix')
                 end
                 colormap(Value)
-            case 'gridscale'
-                GRID_SCALE = Value;
             case 'plotdisk'
                 PLOTDISK = lower(Value);
                 if ~strcmp(PLOTDISK,'on') && ~strcmp(PLOTDISK,'off')
@@ -434,16 +451,16 @@ if nargs > 2
                 if strcmpi(ELECTRODES,'pointlabels') || strcmpi(ELECTRODES,'ptslabels') ...
                         | strcmpi(ELECTRODES,'labelspts') | strcmpi(ELECTRODES,'ptlabels') ...
                         | strcmpi(ELECTRODES,'labelpts')
-                    ELECTRODES = 'labelpoint'; % backwards compatability
+                    ELECTRODES = 'labelpoint'; % backwards compatibility
                 elseif strcmpi(ELECTRODES,'pointnumbers') || strcmpi(ELECTRODES,'ptsnumbers') ...
                         | strcmpi(ELECTRODES,'numberspts') | strcmpi(ELECTRODES,'ptnumbers') ...
                         | strcmpi(ELECTRODES,'numberpts')  | strcmpi(ELECTRODES,'ptsnums')  ...
                         | strcmpi(ELECTRODES,'numspts')
-                    ELECTRODES = 'numpoint'; % backwards compatability
+                    ELECTRODES = 'numpoint'; % backwards compatibility
                 elseif strcmpi(ELECTRODES,'nums')
-                    ELECTRODES = 'numbers'; % backwards compatability
+                    ELECTRODES = 'numbers'; % backwards compatibility
                 elseif strcmpi(ELECTRODES,'pts')
-                    ELECTRODES = 'on'; % backwards compatability
+                    ELECTRODES = 'on'; % backwards compatibility
                 elseif ~strcmp(ELECTRODES,'off') ...
                         & ~strcmpi(ELECTRODES,'on') ...
                         & ~strcmp(ELECTRODES,'labels') ...
@@ -516,6 +533,8 @@ if nargs > 2
                 if length(Value) > 4
                     EMARKER2LINEWIDTH = Value{5};
                 end
+            case 'scatter'
+                SCATTER = Value;
             case 'shrink'
                 shrinkfactor = Value;
             case 'intrad'
@@ -611,7 +630,6 @@ if isempty(find(strcmp(varargin,'colormap')))
 else
     cmap = colormap;
 end
-if strcmp(noplot,'on'), close(gcf); end
 cmaplen = size(cmap,1);
 
 if strcmp(STYLE,'blank')    % else if Values holds numbers of channels to mark
@@ -887,7 +905,7 @@ if length(pltchans) < length(Rd) && strcmpi(VERBOSE, 'on')
 end;	
 
 
-% fprintf('topoplot(): plotting %d channels\n',length(pltchans));
+% fprintf('TOPOPLOT: plotting %d channels\n',length(pltchans));
 if ~isempty(EMARKER2CHANS)
     if strcmpi(STYLE,'blank')
        error('emarker2 not defined for style ''blank'' - use marking channel numbers in place of data');
@@ -986,15 +1004,10 @@ if ~strcmpi(STYLE,'blank') % if draw interpolated scalp map
   %
   xi = linspace(xmin,xmax,GRID_SCALE);   % x-axis description (row vector)
   yi = linspace(ymin,ymax,GRID_SCALE);   % y-axis description (row vector)
+  [yi,xi] = meshgrid(yi, xi);
+  [Xi,Yi,Zi] = griddata(inty,intx,double(intValues),yi,xi,'v4'); % interpolate data
+  [Xi,Yi,ZiC] = griddata(inty,intx,double(intContourVals),yi,xi,'v4'); % interpolate data
 
-  try
-      [Xi,Yi,Zi] = griddata(inty,intx,double(intValues),yi',xi,'v4'); % interpolate data
-      [Xi,Yi,ZiC] = griddata(inty,intx,double(intContourVals),yi',xi,'v4'); % interpolate data
-  catch,
-      [Xi,Yi] = meshgrid(yi',xi);
-      Zi  = gdatav4(inty,intx,double(intValues), Xi, Yi);
-      ZiC = gdatav4(inty,intx,double(intContourVals), Xi, Yi);
-  end
   %
   %%%%%%%%%%%%%%%%%%%%%%% Mask out data outside the head %%%%%%%%%%%%%%%%%%%%%
   %
@@ -1227,7 +1240,9 @@ if ~strcmpi(STYLE,'blank') % if draw interpolated scalp map
 
 % 7/30/2014 Ramon: +-5% for the color limits were added
 cax_sgn = sign([amin amax]);                                                  % getting sign
-caxis([amin+cax_sgn(1)*(0.05*abs(amin)) amax+cax_sgn(2)*(0.05*abs(amax))]);   % Adding 5% to the color limits
+if ~all(cax_sgn == 0)
+    caxis([amin+cax_sgn(1)*(0.05*abs(amin)) amax+cax_sgn(2)*(0.05*abs(amax))]);   % Adding 5% to the color limits
+end
 
 else % if STYLE 'blank'
 %
@@ -1422,12 +1437,18 @@ end
  set(plotax,'ylim',ylm);                               % copy position and axis limits again
 
 axis equal;
-lim = [-0.525 0.525];
-%lim = [-0.56 0.56];
-set(gca, 'xlim', lim); set(plotax, 'xlim', lim);
-set(gca, 'ylim', lim); set(plotax, 'ylim', lim);
-set(gca, 'xlim', lim); set(plotax, 'xlim', lim);
-set(gca, 'ylim', lim); set(plotax, 'ylim', lim);
+lim = [-plotrad plotrad];
+if abs(max(lim)) < 0.55
+    xlimval = [-0.55 0.55];
+    ylimval = [lim(1) 0.58];
+else
+    xlimval = lim;
+    ylimval = lim;
+end
+set(gca, 'xlim', xlimval); set(plotax, 'xlim', xlimval);
+set(gca, 'ylim', ylimval); set(plotax, 'ylim', ylimval);
+set(gca, 'xlim', xlimval); set(plotax, 'xlim', xlimval);
+set(gca, 'ylim', ylimval); set(plotax, 'ylim', ylimval);
  
 %get(textax,'pos')    % test if equal!
 %get(plotax,'pos')
@@ -1461,13 +1482,28 @@ ELECTRODE_HEIGHT = 2.1;  % z value for plotting electrode information (above the
 
 if strcmp(ELECTRODES,'on')   % plot electrodes as spots
   if isempty(EMARKER2CHANS)
-    hp2 = plot3(y,x,ones(size(x))*ELECTRODE_HEIGHT,...
-        EMARKER,'Color',ECOLOR,'markersize',EMARKERSIZE,'linewidth',EMARKERLINEWIDTH);
+      if strcmp(SCATTER, 'on')
+        if length(EMARKERSIZE)==1, S = repmat(EMARKERSIZE,numel(x),1); s = S(:); else, s = EMARKERSIZE(pltchans); end
+        if size(ECOLOR,1)>1, ECOLOR = ECOLOR(pltchans,:); end
+        hp2 = scatter3(y,x,ones(size(x))*ELECTRODE_HEIGHT,s,ECOLOR,'filled');
+      else
+        hp2 = plot3(y,x,ones(size(x))*ELECTRODE_HEIGHT,...
+            EMARKER,'Color',ECOLOR,'markersize',EMARKERSIZE,'linewidth',EMARKERLINEWIDTH);
+      end
   else % plot markers for normal chans and EMARKER2CHANS separately
-    hp2 = plot3(y(mark1chans),x(mark1chans),ones(size((mark1chans)))*ELECTRODE_HEIGHT,...
-        EMARKER,'Color',ECOLOR,'markersize',EMARKERSIZE,'linewidth',EMARKERLINEWIDTH);
-    hp2b = plot3(y(mark2chans),x(mark2chans),ones(size((mark2chans)))*ELECTRODE_HEIGHT,...
-        EMARKER2,'Color',EMARKER2COLOR,'markerfacecolor',EMARKER2COLOR,'linewidth',EMARKER2LINEWIDTH,'markersize',EMARKERSIZE2);
+      if strcmp(SCATTER, 'on')
+        if length(EMARKERSIZE)==1, S = repmat(EMARKERSIZE,numel(x),1); s = S(:); else, s = EMARKERSIZE(pltchans); end
+        if size(ECOLOR,1)>1, ECOLOR = ECOLOR(pltchans,:); end
+        hp2 = scatter3(y(mark1chans),x(mark1chans),ones(size((mark1chans)))*ELECTRODE_HEIGHT,s,ECOLOR,'filled');
+        if length(EMARKERSIZE)==1, S = repmat(EMARKERSIZE,numel(x),1); s = S(:); else, s = EMARKERSIZE2(pltchans); end
+        if size(EMARKER2COLOR,1)>1, EMARKER2COLOR = EMARKER2COLOR(pltchans,:); end
+        hp2b = scatter3(y(mark2chans),x(mark2chans),ones(size((mark2chans)))*ELECTRODE_HEIGHT,s,EMARKER2COLOR,'filled');
+      else
+        hp2 = plot3(y(mark1chans),x(mark1chans),ones(size((mark1chans)))*ELECTRODE_HEIGHT,...
+            EMARKER,'Color',ECOLOR,'markersize',EMARKERSIZE,'linewidth',EMARKERLINEWIDTH);
+        hp2b = plot3(y(mark2chans),x(mark2chans),ones(size((mark2chans)))*ELECTRODE_HEIGHT,...
+            EMARKER2,'Color',EMARKER2COLOR,'markerfacecolor',EMARKER2COLOR,'linewidth',EMARKER2LINEWIDTH,'markersize',EMARKERSIZE2);  
+      end
   end
 %
 %%%%%%%%%%%%%%%%%%%%%%%% Print electrode labels only %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1484,44 +1520,77 @@ elseif strcmp(ELECTRODES,'labels')  % print electrode names (labels)
 %
 elseif strcmp(ELECTRODES,'labelpoint') 
   if isempty(EMARKER2CHANS)
-    hp2 = plot3(y,x,ones(size(x))*ELECTRODE_HEIGHT,...
-        EMARKER,'Color',ECOLOR,'markersize',EMARKERSIZE,'linewidth',EMARKERLINEWIDTH);
-  else
-    hp2 = plot3(y(mark1chans),x(mark1chans),ones(size((mark1chans)))*ELECTRODE_HEIGHT,...
-        EMARKER,'Color',ECOLOR,'markersize',EMARKERSIZE,'linewidth',EMARKERLINEWIDTH);
-    hp2b = plot3(y(mark2chans),x(mark2chans),ones(size((mark2chans)))*ELECTRODE_HEIGHT,...
-        EMARKER2,'Color',EMARKER2COLOR,'markerfacecolor',EMARKER2COLOR,'linewidth',EMARKER2LINEWIDTH,'markersize',EMARKERSIZE2);
+      if strcmp(SCATTER, 'on')
+        if length(EMARKERSIZE)==1, S = repmat(EMARKERSIZE,numel(x),1); s = S(:); else, s = EMARKERSIZE(pltchans); end
+        if size(ECOLOR,1)>1, ECOLOR = ECOLOR(pltchans,:); end
+        hp2 = scatter3(y,x,ones(size(x))*ELECTRODE_HEIGHT,s,ECOLOR,'filled');
+      else
+        hp2 = plot3(y,x,ones(size(x))*ELECTRODE_HEIGHT,...
+            EMARKER,'Color',ECOLOR,'markersize',EMARKERSIZE,'linewidth',EMARKERLINEWIDTH);
+      end
+  else % plot markers for normal chans and EMARKER2CHANS separately
+      if strcmp(SCATTER, 'on')
+        if length(EMARKERSIZE)==1, S = repmat(EMARKERSIZE,numel(x),1); s = S(:); else, s = EMARKERSIZE(pltchans); end
+        if size(ECOLOR,1)>1, ECOLOR = ECOLOR(pltchans,:); end
+        hp2 = scatter3(y(mark1chans),x(mark1chans),ones(size((mark1chans)))*ELECTRODE_HEIGHT,s,ECOLOR,'filled');
+        if length(EMARKERSIZE)==1, S = repmat(EMARKERSIZE,numel(x),1); s = S(:); else, s = EMARKERSIZE2(pltchans); end
+        if size(EMARKER2COLOR,1)>1, EMARKER2COLOR = EMARKER2COLOR(pltchans); end
+        hp2b = scatter3(y(mark2chans),x(mark2chans),ones(size((mark2chans)))*ELECTRODE_HEIGHT,s,EMARKER2COLOR,'filled');
+      else
+        hp2 = plot3(y(mark1chans),x(mark1chans),ones(size((mark1chans)))*ELECTRODE_HEIGHT,...
+            EMARKER,'Color',ECOLOR,'markersize',EMARKERSIZE,'linewidth',EMARKERLINEWIDTH);
+        hp2b = plot3(y(mark2chans),x(mark2chans),ones(size((mark2chans)))*ELECTRODE_HEIGHT,...
+            EMARKER2,'Color',EMARKER2COLOR,'markerfacecolor',EMARKER2COLOR,'linewidth',EMARKER2LINEWIDTH,'markersize',EMARKERSIZE2); 
+      end
   end
   for i = 1:size(labels,1)
-    hh(i) = text(double(y(i)+0.01),double(x(i)),...
-        ELECTRODE_HEIGHT,labels(i,:),'HorizontalAlignment','left',...
-	'VerticalAlignment','middle','Color', ECOLOR,'userdata', num2str(allchansind(i)), ...
-	'FontSize',EFSIZE, 'buttondownfcn', ...
-	    ['tmpstr = get(gco, ''userdata'');'...
-	     'set(gco, ''userdata'', get(gco, ''string''));' ...
-	     'set(gco, ''string'', tmpstr); clear tmpstr;'] );
+      if size(ECOLOR,1)>1, ec = ECOLOR(i,:); if size(ec,2)==1, ec = 'k'; end, else, ec = ECOLOR; end
+      hh(i) = text(double(y(i)+0.01),double(x(i)),...
+          ELECTRODE_HEIGHT,labels(i,:),'HorizontalAlignment','left',...
+  	    'VerticalAlignment','middle','Color', ec,'userdata', num2str(allchansind(i)), ...
+        'FontSize',EFSIZE, 'buttondownfcn', ...
+        ['tmpstr = get(gco, ''userdata'');'...
+        'set(gco, ''userdata'', get(gco, ''string''));' ...
+        'set(gco, ''string'', tmpstr); clear tmpstr;'] );
   end
+  
 %
 %%%%%%%%%%%%%%%%%%%%%%% Mark electrode locations plus numbers %%%%%%%%%%%%%%%%%%%
 %
 elseif strcmp(ELECTRODES,'numpoint') 
   if isempty(EMARKER2CHANS)
-    hp2 = plot3(y,x,ones(size(x))*ELECTRODE_HEIGHT,...
-        EMARKER,'Color',ECOLOR,'markersize',EMARKERSIZE,'linewidth',EMARKERLINEWIDTH);
-  else
-    hp2 = plot3(y(mark1chans),x(mark1chans),ones(size((mark1chans)))*ELECTRODE_HEIGHT,...
-        EMARKER,'Color',ECOLOR,'markersize',EMARKERSIZE,'linewidth',EMARKERLINEWIDTH);
-    hp2b = plot3(y(mark2chans),x(mark2chans),ones(size((mark2chans)))*ELECTRODE_HEIGHT,...
-        EMARKER2,'Color',EMARKER2COLOR,'markerfacecolor',EMARKER2COLOR,'linewidth',EMARKER2LINEWIDTH,'markersize',EMARKERSIZE2);
+      if strcmp(SCATTER, 'on')
+        if length(EMARKERSIZE)==1, S = repmat(EMARKERSIZE,numel(x),1); s = S(:); else, s = EMARKERSIZE(pltchans); end
+        if size(ECOLOR,1)>1, ECOLOR = ECOLOR(pltchans,:); end
+        hp2 = scatter3(y,x,ones(size(x))*ELECTRODE_HEIGHT,s,ECOLOR,'filled');
+      else
+        hp2 = plot3(y,x,ones(size(x))*ELECTRODE_HEIGHT,...
+            EMARKER,'Color',ECOLOR,'markersize',EMARKERSIZE,'linewidth',EMARKERLINEWIDTH);
+      end
+  else % plot markers for normal chans and EMARKER2CHANS separately
+      if strcmp(SCATTER, 'on')
+        if length(EMARKERSIZE)==1, S = repmat(EMARKERSIZE,numel(x),1); s = S(:); else, s = EMARKERSIZE(pltchans); end
+        if size(ECOLOR,1)>1, ECOLOR = ECOLOR(pltchans,:); end
+        hp2 = scatter3(y(mark1chans),x(mark1chans),ones(size((mark1chans)))*ELECTRODE_HEIGHT,s,ECOLOR,'filled');
+        if length(EMARKERSIZE)==1, S = repmat(EMARKERSIZE,numel(x),1); s = S(:); else, s = EMARKERSIZE2(pltchans); end
+        if size(EMARKER2COLOR,1)>1, EMARKER2COLOR = EMARKER2COLOR(pltchans); end
+        hp2b = scatter3(y(mark2chans),x(mark2chans),ones(size((mark2chans)))*ELECTRODE_HEIGHT,s,EMARKER2COLOR,'filled');
+      else
+        hp2 = plot3(y(mark1chans),x(mark1chans),ones(size((mark1chans)))*ELECTRODE_HEIGHT,...
+            EMARKER,'Color',ECOLOR,'markersize',EMARKERSIZE,'linewidth',EMARKERLINEWIDTH);
+        hp2b = plot3(y(mark2chans),x(mark2chans),ones(size((mark2chans)))*ELECTRODE_HEIGHT,...
+            EMARKER2,'Color',EMARKER2COLOR,'markerfacecolor',EMARKER2COLOR,'linewidth',EMARKER2LINEWIDTH,'markersize',EMARKERSIZE2); 
+      end
   end
   for i = 1:size(labels,1)
-    hh(i) = text(double(y(i)+0.01),double(x(i)),...
-        ELECTRODE_HEIGHT,num2str(allchansind(i)),'HorizontalAlignment','left',...
-	'VerticalAlignment','middle','Color', ECOLOR,'userdata', labels(i,:) , ...
-	'FontSize',EFSIZE, 'buttondownfcn', ...
-	    ['tmpstr = get(gco, ''userdata'');'...
-	     'set(gco, ''userdata'', get(gco, ''string''));' ...
-	     'set(gco, ''string'', tmpstr); clear tmpstr;'] );
+      if size(ECOLOR,1)>1, ec = ECOLOR(i,:); if size(ec,2)==1, ec = 'k'; end, else, ec = ECOLOR; end
+      hh(i) = text(double(y(i)+0.01),double(x(i)),...
+          ELECTRODE_HEIGHT,num2str(allchansind(i)),'HorizontalAlignment','left',...
+          'VerticalAlignment','middle','Color', ec,'userdata', labels(i,:) , ...
+          'FontSize',EFSIZE, 'buttondownfcn', ...
+          ['tmpstr = get(gco, ''userdata'');'...
+    	     'set(gco, ''userdata'', get(gco, ''string''));' ...
+             'set(gco, ''string'', tmpstr); clear tmpstr;'] );
   end
 %
 %%%%%%%%%%%%%%%%%%%%%% Print electrode numbers only %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1543,7 +1612,7 @@ end
 %
 %%%%%%%% Mark specified electrode locations with red filled disks  %%%%%%%%%%%%%%%%%%%%%%
 %
-try,
+try
     if strcmpi(STYLE,'blank') % if mark-selected-channel-locations mode
         for kk = 1:length(1:length(x))
             if abs(Values(kk))

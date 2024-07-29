@@ -1,9 +1,9 @@
-% eeg_rejmacro() - Internal EEGLAB macro for all pop_ functions that
+% EEG_REJMACRO - Internal EEGLAB macro for all pop_ functions that
 %                  perform data rejection.   
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 2001
 %
-% See also: eeglab()
+% See also: EEGLAB
 
 % Copyright (C) 2001 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -51,8 +51,9 @@ if ~exist('elecrange')
 	help eeg_rejmacro;
 	error('Error: eeg_rejmacro cannot be called from the command line');
 end;	
-
-if ~exist('nbpnts') nbpnts = EEG.pnts; end
+if ~exist('nbpnts')
+    nbpnts = EEG.pnts;
+end
 
 % mix all type of rejections
 % --------------------------
@@ -106,9 +107,9 @@ if reject
     com2 = [ com2 ...
            '[EEGTMP LASTCOM] = pop_rejepoch(EEG, tmprej, 1);' ...
 		   'if ~isempty(LASTCOM),'...
+           '   EEG = eegh(LASTCOM, EEG);' ...
            '   [ALLEEG EEG CURRENTSET tmpcom] = pop_newset(ALLEEG, EEGTMP, CURRENTSET);' ...
            '   if ~isempty(tmpcom),' ... 
-           '     EEG = eegh(LASTCOM, EEG);' ...
            '     eegh(tmpcom);' ...
            '     eeglab(''redraw'');' ...
             '  end;' ...
@@ -119,7 +120,7 @@ else
 			'''To actually reject these epochs, use the same menu item to'',' ...
             '''inspect/reject data and select "Reject marked trials" checkbox''), ''Warning'');' ...
 			'[ALLEEG EEG] = eeg_store(ALLEEG, EEG, CURRENTSET); eeglab(''redraw''); end;' ];
-end; 
+end
 if ~exist('topcommand')
 	topcommand = [];
 end
@@ -142,7 +143,7 @@ switch superpose
 		 else rejeegplot = []; end
          rejeegplottmp = trial2eegplot(  rej, rejE, nbpnts, colrej);
          if ~isempty(rejeegplottmp), rejeegplot = [ rejeegplot; rejeegplottmp ]; end
- case 2, 
+ case 2
   rejeegplot = [];
   for index = 1:length(EEG.reject.disprej)
 	  if ~isempty(EEG.reject.disprej{index})

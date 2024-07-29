@@ -1,5 +1,5 @@
-addpath('/home/octave/eeglab');
-addpath('/home/octave/dataqual');
+addpath('eeglab');
+addpath('dataqual');
 eeglab nogui;
 
 arg_list = argv();

@@ -1,4 +1,4 @@
-% pop_rejmenu() - Main menu for rejecting trials in an EEG dataset
+% POP_REJMENU - Main menu for rejecting trials in an EEG dataset
 %
 % Usage: >> pop_rejmenu(INEEG, typerej);
 %
@@ -9,8 +9,8 @@
 %
 % Author: Arnaud Delorme, CNL / Salk Institute, 2001
 %
-% See also: eeglab(), pop_eegplot(), pop_eegthresh, pop_rejtrend()
-% pop_rejkurt(), pop_jointprob(), pop_rejspec() 
+% See also: EEGLAB, POP_EEGPLOT, pop_eegthresh, POP_REJTREND
+% POP_REJKURT, POP_JOINTPROB, POP_REJSPEC 
 
 % Copyright (C) 2001 Arnaud Delorme, Salk Institute, arno@salk.edu
 %
@@ -46,8 +46,9 @@ if icacomp == 0
 		disp('Error: you must first run ICA on the data'); return;
 	end
 end
-
-if icacomp == 1 	rejtitle = 'Reject trials using data statistics - pop_rejmenu()'; tagmenu = 'rejtrialraw';
+if icacomp == 1
+    rejtitle = 'Reject trials using data statistics - pop_rejmenu()'; 
+    tagmenu = 'rejtrialraw';
 else            	rejtitle = 'Reject trials using component activity statistics - pop_rejmenu()'; tagmenu = 'rejtrialica';
 end;	
 

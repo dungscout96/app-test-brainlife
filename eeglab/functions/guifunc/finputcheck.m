@@ -1,4 +1,4 @@
-% finputcheck() - check Matlab function {'key','value'} input argument pairs
+% FINPUTCHECK - check Matlab function {'key','value'} input argument pairs
 %
 % Usage: >> result = finputcheck( varargin, fieldlist );
 %        >> [result varargin] = finputcheck( varargin, fieldlist, ... 
@@ -150,7 +150,7 @@ function [g, varargnew] = finputcheck( vararg, fieldlist, callfunc, mode, verbos
                 end
                 if ~ischar(res{it}), testres = 1; end
             end
-            if testres == 0,
+            if testres == 0
                 g = res{1};
                 for tmpi = 2:length(res)
                     g = [ g 10 'or ' res{tmpi} ];
@@ -174,16 +174,19 @@ function [g, varargnew] = finputcheck( vararg, fieldlist, callfunc, mode, verbos
 	end
 
 
-function g = fieldtest( fieldname, fieldtype, fieldval, tmpval, callfunc );
+function g = fieldtest( fieldname, fieldtype, fieldval, tmpval, callfunc )
 	NAME = 1;
 	TYPE = 2;
 	VALS = 3;
 	DEF  = 4;
 	SIZE = 5;
     g = [];
+    if isstring2(tmpval) 
+        tmpval = char(tmpval);
+    end
     
     switch fieldtype
-     case { 'integer' 'real' 'boolean' 'float' }, 
+     case { 'integer' 'real' 'boolean' 'float' }
       if ~isnumeric(tmpval) && ~islogical(tmpval)
           g = [ callfunc 'error: argument ''' fieldname ''' must be numeric' ]; return;
       end
@@ -206,7 +209,7 @@ function g = fieldtest( fieldname, fieldtype, fieldval, tmpval, callfunc );
                   end
               end
           end
-      end;  
+      end
       
       
      case 'string'
@@ -243,11 +246,14 @@ function g = fieldtest( fieldname, fieldtype, fieldval, tmpval, callfunc );
 % remove duplicates in the list of parameters
 % -------------------------------------------
 function cella = removedup(cella, verbose)
-% make sure if all the values passed to unique() are strings, if not, exist
+% make sure if all the values passed to UNIQUE are strings, if not, exist
 %try
-    [tmp indices] = unique_bc(cella(1:2:end));
-    if length(tmp) ~= length(cella)/2
-        myfprintf(verbose,'Note: duplicate ''key'', ''val'' parameter(s), keeping the last one(s)\n');
+    allFields = cella(1:2:end);
+    [tmp, indices, X] = unique_bc(allFields);
+    if length(tmp) ~= length(allFields)
+        Y = hist(X,unique(X));
+        fieldDuplicates = allFields(Y > 1);
+        myfprintf(verbose,'Note: duplicate ''%s'' parameter(s), keeping the last one(s)\n', fieldDuplicates{1});
     end
     cella = cella(sort(union(indices*2-1, indices*2)));
 %catch
@@ -259,4 +265,10 @@ function myfprintf(verbose, varargin)
 
 if strcmpi(verbose, 'verbose')
     fprintf(varargin{:});
+end
+
+function b = isstring2(str)
+b = false;
+if exist('isstring', 'builtin')
+    b = isstring(str);
 end

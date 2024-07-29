@@ -1,4 +1,4 @@
-% pop_specparams() - Set plotting and statistics parameters for computing
+% POP_SPECPARAMS - Set plotting and statistics parameters for computing
 %                    STUDY component spectra.
 % Usage:    
 %       >> STUDY = pop_specparams(STUDY, 'key', 'val');   
@@ -28,7 +28,7 @@
 %   'averagechan' - ['rms'|'on'|'off'] average data channels when several are
 %                  selected ('on') or compute root mean square ('rms').
 %
-% See also: std_specplot()
+% See also: STD_SPECPLOT
 %
 % Authors: Arnaud Delorme, CERCO, CNRS, 2006-
 
@@ -69,7 +69,7 @@ if isempty(varargin)
     enablecond  = 'off';
     enablegroup = 'off';
     if length(STUDY.design(STUDY.currentdesign).variable) > 0 && length(STUDY.design(STUDY.currentdesign).variable(1).value)>1, enablecond  = 'on'; end
-    if length(STUDY.design(STUDY.currentdesign).variable) > 1 && length(STUDY.design(STUDY.currentdesign).variable(2).value)>1, enablegroup = 'on'; end;   
+    if length(STUDY.design(STUDY.currentdesign).variable) > 1 && length(STUDY.design(STUDY.currentdesign).variable(2).value)>1, enablegroup = 'on'; end  
     plotconditions     = fastif(strcmpi(STUDY.etc.specparams.plotconditions, 'together'), 1, 0);
     plotgroups         = fastif(strcmpi(STUDY.etc.specparams.plotgroups,'together'), 1, 0);
     submean            = fastif(strcmpi(STUDY.etc.specparams.subtractsubjectmean,'on'), 1, 0);
@@ -156,18 +156,16 @@ if isempty(varargin)
     if ~isequal(res.ylim, STUDY.etc.specparams.ylim),               options = { options{:} 'ylim' res.ylim      }; end
     if ~isequal(res.freqrange, STUDY.etc.specparams.freqrange) && res.multiplechan ~= 2,     options = { options{:} 'freqrange' res.freqrange }; end
     
-    % mutliple channel option
+    % multiple channel option
     % -----------------------
     if res.multiplechan == 1
         if ~isequal('off', STUDY.etc.specparams.averagechan), options = { options{:} 'averagechan' 'off' }; end
         if ~isempty(       STUDY.etc.specparams.topofreq),    options = { options{:} 'topofreq' [] }; end
     elseif res.multiplechan == 2
-        if ~isequal('off', STUDY.etc.specparams.averagechan), options = { options{:} 'averagechan' 'off' }; end
-        if ~isequal(res.freqrange, STUDY.etc.specparams.topofreq) options = { options{:} 'topofreq' res.freqrange }; end
-        if ~isequal([], STUDY.etc.specparams.freqrange) options = { options{:} 'freqrange' [] }; end
-        if isempty(res.freqrange)
-            disp('Warning: you must select a frequency range to plot scalp topographies, plotting individual channels instead');
-        end
+        if ~isequal('off', STUDY.etc.specparams.averagechan), options = {options{:}, 'averagechan', 'off'}; end
+        if ~isequal(res.freqrange, STUDY.etc.specparams.topofreq), options = {options{:}, 'topofreq', res.freqrange}; end
+        if ~isequal([], STUDY.etc.specparams.freqrange), options = { options{:}, 'freqrange', [] }; end
+        if isempty(res.freqrange), disp('Warning: you must select a frequency range to plot scalp topographies, plotting individual channels instead'); end
     elseif res.multiplechan > 2
         if ~isempty(       STUDY.etc.specparams.topofreq),    options = { options{:} 'topofreq' [] }; end
         if res.multiplechan == 3
